@@ -36,4 +36,4 @@ export const TEAM_COLORS = {
 export const ABBR_FULL = {
   ARS:"Arsenal",MCI:"Man City",LIV:"Liverpool",TOT:"Spurs",CHE:"Chelsea",
   MUN:"Man Utd",NEW:"Newcastle",AVL:"Aston Villa",BHA:"Brighton",BOU:"Bournemouth",
-  WOL:"Wolves",NFO:"Nott'm Forest",BRE:"Brentford​​​​​​​​​​​​​​​​
+  WOL:"Wolves",NFO:"Nottm Forest",BRE:"Brentford​​​​​​​​​​​​​​​​
