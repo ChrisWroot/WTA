@@ -74,7 +74,14 @@ export default function App() {
 
   useEffect(() => {
     fetchSheetData()
-      .then(data => { setAllData(parseSheetData(data)); setLoading(false); })
+      .then(data => {
+        const parsed = parseSheetData(data);
+        const hasData = Object.values(parsed).some(season =>
+          Object.values(season).some(game => Object.keys(game.picks).length > 0)
+        );
+        if (hasData) setAllData(parsed);
+        setLoading(false);
+      })
       .catch(() => { setLiveError(true); setLoading(false); });
   }, []);
 
