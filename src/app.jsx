@@ -1,7 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
 import { fetchSheetData } from "./data.js";
-import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS, ABBR_FULL, GAME_COLS } from "./constants.js";
-
+import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS, GAME_COLS } from "./constants.js";
+const ABBR_FULL = {
+  ARS:"Arsenal",MCI:"Man City",LIV:"Liverpool",TOT:"Spurs",CHE:"Chelsea",
+  MUN:"Man Utd",NEW:"Newcastle",AVL:"Aston Villa",BHA:"Brighton",BOU:"Bournemouth",
+  WOL:"Wolves",NFO:"Nottm Forest",BRE:"Brentford",CRY:"Crystal Palace",
+  EVE:"Everton",FUL:"Fulham",WHU:"West Ham",IPS:"Ipswich",SUN:"Sunderland",
+};
 function getCellColor(rowData, colIdx) {
   try {
     const bg = rowData[colIdx]?.userEnteredFormat?.backgroundColor;
