@@ -814,7 +814,7 @@ export default function App() {
                         <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
                           <span style={{ color:C.muted }}>🎟 {p.ssWins} {p.ssWins===1?"win":"wins"}</span>
                           <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.ss.toFixed(2)}</span>
-                       {prizeTab==="wroot" && (
+{prizeTab==="wroot" && (
               <div>
                 <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:14 }}>WROOT FAMILY % OF TOTAL PRIZE POT</div>
                 {(() => {
@@ -857,10 +857,12 @@ export default function App() {
                       </div>
                     </div>
                   );
-                 )}
-           </div>
+                })()}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
   );
-}
+}                    
