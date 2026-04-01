@@ -445,7 +445,7 @@ export default function App() {
 
       <div style={{ maxWidth:1000, margin:"0 auto", padding:"16px" }}>
         <div style={{ display:"flex", borderBottom:`1px solid ${C.border}`, marginBottom:18, overflowX:"auto" }}>
-          {[["grid","Picks Grid"],["success","Success Rate"],["history","Pick History"],["records","Records"],["stats","Stats"],["prize","Prize Money"]].map(([v,l]) => (
+          {[["grid","Picks Grid"],["success","Success Rate"],["history","Pick History"],["stats","Stats"],["prize","Prize Money"]].map(([v,l]) => (
             <button key={v} style={tabBtn(activeTab===v)} onClick={()=>setActiveTab(v)}>{l}</button>
           ))}
         </div>
@@ -928,6 +928,59 @@ export default function App() {
                   <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>same pick in {p.matches} of {p.total} shared gameweeks</div>
                 </div>
               ))}
+            </div>
+
+
+            {/* 12. Hall of Fame */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>🏆 Hall of Fame — Best Player/Team</div>
+              <div style={{ display:"flex", flexDirection:"column" }}>
+                {teamRecords.best.slice(0,3).map((d,i) => {
+                  const color = TEAM_COLORS[d.team]||"#888";
+                  const pctColor = d.pct===100?C.green:d.pct>=85?"#84cc16":C.amber;
+                  const dots = [...Array(d.wins).fill(true),...Array(d.losses).fill(false)];
+                  return (
+                    <div key={d.player+d.team} style={{ display:"flex", alignItems:"flex-start", gap:8, padding:"8px 0", borderBottom:i<2?"1px solid #0d1a2e":"none" }}>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:i===0?"#FFD700":i===1?"#C0C0C0":"#CD7F32", width:20, flexShrink:0, paddingTop:1, textAlign:"right" }}>{i+1}</div>
+                      <div style={{ background:`${color}18`, border:`1px solid ${color}50`, borderRadius:4, padding:"2px 6px", fontSize:9, fontWeight:700, color, flexShrink:0, marginTop:1, minWidth:32, textAlign:"center" }}>{d.team}</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:11, fontWeight:600, color:C.text }}>{d.player}</div>
+                        <div style={{ display:"flex", gap:3, flexWrap:"wrap", marginTop:4 }}>
+                          {dots.map((w,j) => <span key={j} style={{ width:7, height:7, borderRadius:"50%", background:w?C.green:C.red, display:"inline-block", flexShrink:0, opacity:0.9 }}/>)}
+                        </div>
+                      </div>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:pctColor, lineHeight:1, flexShrink:0, paddingTop:1 }}>{d.pct}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize:9, color:C.muted, marginTop:8 }}>min 5 picks · all seasons</div>
+            </div>
+
+            {/* 13. Hall of Shame */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>💀 Hall of Shame — Worst Player/Team</div>
+              <div style={{ display:"flex", flexDirection:"column" }}>
+                {teamRecords.worst.slice(0,3).map((d,i) => {
+                  const color = TEAM_COLORS[d.team]||"#888";
+                  const pctColor = d.pct<=14?C.red:d.pct<=40?"#f97316":C.amber;
+                  const dots = [...Array(d.wins).fill(true),...Array(d.losses).fill(false)];
+                  return (
+                    <div key={d.player+d.team} style={{ display:"flex", alignItems:"flex-start", gap:8, padding:"8px 0", borderBottom:i<2?"1px solid #0d1a2e":"none" }}>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:i===0?"#FFD700":i===1?"#C0C0C0":"#CD7F32", width:20, flexShrink:0, paddingTop:1, textAlign:"right" }}>{i+1}</div>
+                      <div style={{ background:`${color}18`, border:`1px solid ${color}50`, borderRadius:4, padding:"2px 6px", fontSize:9, fontWeight:700, color, flexShrink:0, marginTop:1, minWidth:32, textAlign:"center" }}>{d.team}</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:11, fontWeight:600, color:C.text }}>{d.player}</div>
+                        <div style={{ display:"flex", gap:3, flexWrap:"wrap", marginTop:4 }}>
+                          {dots.map((w,j) => <span key={j} style={{ width:7, height:7, borderRadius:"50%", background:w?C.green:C.red, display:"inline-block", flexShrink:0, opacity:0.9 }}/>)}
+                        </div>
+                      </div>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:pctColor, lineHeight:1, flexShrink:0, paddingTop:1 }}>{d.pct}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize:9, color:C.muted, marginTop:8 }}>min 5 picks · all seasons</div>
             </div>
 
           </div>
