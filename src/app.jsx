@@ -673,6 +673,15 @@ export default function App() {
                 }}>{l}</button>
               ))}
             </div>
+{(() => {
+              const grandTotal = overallStats.reduce((a, p) => a + p.total, 0);
+              return grandTotal > 0 ? (
+                <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", justifyContent:"space-between" }) }}>
+                  <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, textTransform:"uppercase" }}>Total Prize Money Awarded</div>
+                  <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.green }}>£{grandTotal.toFixed(2)}</div>
+                </div>
+              ) : null;
+            })()}
 
             {prizeTab==="total" && (
               <div>
