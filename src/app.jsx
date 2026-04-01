@@ -41,7 +41,12 @@ function parseSheetData(formattedRows) {
           const roundNum = roundRow[c]?.userEnteredValue?.numberValue;
           if (!roundNum) continue;
           const cellVal = playerRow[c]?.userEnteredValue?.stringValue;
-          if (!cellVal || cellVal.trim() === "" || cellVal.trim() === "-") continue;
+          if (!cellVal || cellVal.trim() === "") continue;
+const trimmed = cellVal.trim().toLowerCase();
+if (trimmed === "-" || trimmed === "np") {
+  playerPicks.push({ r: Math.round(roundNum), t: "NP", w: false, np: true });
+  continue;
+}
           const t = cellVal.trim();
           const color = getCellColor(playerRow, c);
           const w = color === "green" ? true : color === "red" ? false : null;
