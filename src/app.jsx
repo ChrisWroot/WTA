@@ -662,8 +662,8 @@ export default function App() {
         {activeTab==="prize" && (
           <div>
             <div style={{ display:"flex", gap:0, marginBottom:16, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
-              {[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","WTA 24/25-25/26"],["gg","Goal Guess"],["ss","Sweepstake"]].map(([v,l]) => (
-                <button key={v} onClick={()=>setPrizeTab(v)} style={{
+{[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","WTA 24/25-25/26"],["gg","Goal Guess"],["ss","Sweepstake"],["wroot","Wroot %"]].map(([v,l]) => (
+              <button key={v} onClick={()=>setPrizeTab(v)} style={{
                   padding:"9px 12px", cursor:"pointer", fontFamily:"inherit",
                   fontSize:9, letterSpacing:1.2, textTransform:"uppercase", border:"none",
                   background:prizeTab===v?"#0f2050":"transparent",
@@ -820,6 +820,54 @@ export default function App() {
                 </div>
               </div>
             )}
+            {prizeTab==="wroot" && (
+              <div>
+                <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:14 }}>WROOT FAMILY % OF TOTAL PRIZE POT</div>
+                {(() => {
+                  const grandTotal = overallStats.reduce((a, p) => a + p.total, 0);
+                  const wrootPlayers = ["Chris W", "Tom", "Katy"];
+                  const wrootTotal = overallStats
+                    .filter(p => wrootPlayers.includes(p.player))
+                    .reduce((a, p) => a + p.total, 0);
+                  const wrootPct = grandTotal > 0 ? Math.round(wrootTotal / grandTotal * 100) : 0;
+                  return (
+                    <div>
+                      <div style={{ ...card({ marginBottom:14, textAlign:"center" }) }}>
+                        <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:48, color:C.accent, lineHeight:1 }}>{wrootPct}%</div>
+                        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginTop:4 }}>OF ALL PRIZE MONEY WON BY WROOTS</div>
+                        <div style={{ fontSize:10, color:C.muted, marginTop:6 }}>£{wrootTotal.toFixed(2)} of £{grandTotal.toFixed(2)}</div>
+                        <div style={{ height:8, background:"#111d30", borderRadius:4, overflow:"hidden", marginTop:10 }}>
+                          <div style={{ height:"100%", width:`${wrootPct}%`, background:C.accent, borderRadius:4, transition:"width .5s" }}/>
+                        </div>
+                      </div>
+                      <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                        {overallStats
+                          .filter(p => wrootPlayers.includes(p.player))
+                          .sort((a,b) => b.total - a.total)
+                          .map((p,i) => {
+                            const pct = grandTotal > 0 ? Math.round(p.total / grandTotal * 100) : 0;
+                            return (
+                              <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+                                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+                                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":"#CD7F32", width:18, flexShrink:0 }}>{i+1}</span>
+                                  <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                                  <span style={{ color:C.muted, fontSize:10 }}>£{p.total.toFixed(2)}</span>
+                                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.accent, minWidth:50, textAlign:"right" }}>{pct}%</span>
+                                </div>
+                                <div style={{ height:5, background:"#111d30", borderRadius:3, overflow:"hidden" }}>
+                                  <div style={{ height:"100%", width:`${pct}%`, background:C.accent, borderRadius:3 }}/>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+        )}
           </div>
         )}
       </div>
