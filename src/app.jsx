@@ -155,7 +155,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
       Object.values(allData[s]).forEach(gd => {
         Object.entries(gd.picks).forEach(([player, picks]) => {
           picks.forEach(pk => {
-            if (pk.t === "NP") return;
+            if (pk.t === "NP" || pk.np) return;
             const key = player + "||" + pk.t;
             if (!combos[key]) combos[key] = { player, team: pk.t, picked: 0, wins: 0, losses: 0 };
             combos[key].picked++;
