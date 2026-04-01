@@ -818,7 +818,6 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
 )}
   </div>
 )}
-      </div>
     </div>
   );
 }
