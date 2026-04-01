@@ -286,11 +286,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             {loading && <span style={{ fontSize:9, color:C.amber }}>⟳ syncing...</span>}
             {liveError && <span style={{ fontSize:9, color:C.muted }}>offline mode</span>}
-            <div style={{ display:"flex", gap:6 }}>
-              {["2024","2025"].map(s => (
-                <button key={s} style={pill(season===s)} onClick={()=>{ setSeason(s); setSelectedGame(Object.keys(allData[s])[0]); }}>{s}</button>
-              ))}
-            </div>
+            
           </div>
         </div>
       </div>
@@ -306,9 +302,17 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
 
         {activeTab==="grid" && (
   <div>
+    <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}>
+      {["2024","2025"].map(s => (
+        <button key={s} style={pill(season===s)} onClick={()=>{ setSeason(s); setSelectedGame(Object.keys(allData[s])[0]); }}>
+          {s === "2024" ? "24/25" : "25/26"}
+        </button>
+      ))}
+    </div>
     <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
       {games.map(g => <button key={g} style={pill(selectedGame===g)} onClick={()=>setSelectedGame(g)}>{g.replace("Game","Round")}</button>)}
     </div>
+    ...
     {gameData && <div>
             <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
               <div>
