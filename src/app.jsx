@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { fetchSheetData } from "./data.js";
+import { fetchSheetData, fetchOverallStats } from "./data.js";
 import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS, GAME_COLS } from "./constants.js";
 const ABBR_FULL = {
   ARS:"Arsenal",MCI:"Man City",LIV:"Liverpool",TOT:"Spurs",CHE:"Chelsea",
@@ -79,19 +79,22 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
   const [recordsTab, setRecordsTab] = useState("best");
   const [teamView, setTeamView] = useState("ARS");
   const [historyMode, setHistoryMode] = useState("player");
+  const [overallStats, setOverallStats] = useState([]);
+  const [prizeTab, setPrizeTab] = useState("total");
 
   useEffect(() => {
-    fetchSheetData()
-      .then(data => {
-        const parsed = parseSheetData(data);
-        const hasData = Object.values(parsed).some(season =>
-          Object.values(season).some(game => Object.keys(game.picks).length > 0)
-        );
-        if (hasData) setAllData(parsed);
-        setLoading(false);
-      })
-      .catch(() => { setLiveError(true); setLoading(false); });
-  }, []);
+  Promise.all([fetchSheetData(), fetchOverallStats()])
+    .then(([sheetData, stats]) => {
+      const parsed = parseSheetData(sheetData);
+      const hasData = Object.values(parsed).some(season =>
+        Object.values(season).some(game => Object.keys(game.picks).length > 0)
+      );
+      if (hasData) setAllData(parsed);
+      if (stats.length > 0) setOverallStats(stats);
+      setLoading(false);
+    })
+    .catch(() => { setLiveError(true); setLoading(false); });
+}, []);
 
   const games = Object.keys(allData[season]);
   const gameData = allData[season][selectedGame];
@@ -659,59 +662,156 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
 
         
         {activeTab==="prize" && (
-          <div>
-            <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>NET WINNINGS LEADERBOARD</div>
-            <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:22 }}>
-              {prizeData.leaderboard.map((p,i) => (
-                <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
-                    <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
-                    <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
-                      <span style={{ color:C.green }}>Won £{p.won%1===0?p.won:p.won.toFixed(2)}</span>
-                      <span style={{ color:C.muted }}>Spent £{p.spent}</span>
-                      <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, minWidth:60, textAlign:"right", color:p.net>0?C.green:p.net<0?C.red:C.muted }}>
-                        {p.net>0?"+":""}£{p.net%1===0?p.net:p.net.toFixed(2)}
-                      </span>
-                    </div>
+  <div>
+    <div style={{ display:"flex", gap:0, marginBottom:16, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
+      {[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","WTA 24/25-25/26"],["gg","Goal Guess"],["ss","Sweepstake"]].map(([v,l]) => (
+        <button key={v} onClick={()=>setPrizeTab(v)} style={{
+          padding:"9px 12px", cursor:"pointer", fontFamily:"inherit",
+          fontSize:9, letterSpacing:1.2, textTransform:"uppercase", border:"none",
+          background:prizeTab===v?"#0f2050":"transparent",
+          color:prizeTab===v?C.accent:C.muted,
+          borderBottom:`2px solid ${prizeTab===v?C.accent:"transparent"}`,
+          transition:"all .2s", whiteSpace:"nowrap",
+        }}>{l}</button>
+      ))}
+    </div>
+
+    {prizeTab==="total" && (
+      <div>
+        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ALL TIME TOTAL PRIZE MONEY</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+          {[...overallStats].filter(p => p.total > 0).sort((a,b) => b.total - a.total).map((p,i) => (
+            <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
+                <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
+                  {p.gg>0 && <span style={{ color:C.muted }}>GG £{p.gg.toFixed(2)}</span>}
+                  {p.ss>0 && <span style={{ color:C.muted }}>SS £{p.ss.toFixed(2)}</span>}
+                  {p.wta>0 && <span style={{ color:C.muted }}>WTA £{p.wta.toFixed(2)}</span>}
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {prizeTab==="wta" && (
+      <div>
+        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ALL TIME WINNER TAKES ALL</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+          {[...overallStats].filter(p => p.wta > 0).sort((a,b) => b.wta - a.wta).map((p,i) => (
+            <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
+                <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
+                  {p.wtaWins>0 && <span style={{ color:C.green }}>🏆 {p.wtaWins}</span>}
+                  {p.wtaSplits>0 && <span style={{ color:C.accent }}>🤝 {p.wtaSplits}</span>}
+                  {p.wtaRollovers>0 && <span style={{ color:C.amber }}>🔄 {p.wtaRollovers}</span>}
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.wta.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {prizeTab==="wtacalc" && (
+      <div>
+        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>NET WINNINGS — 24/25 & 25/26 SEASONS</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:22 }}>
+          {prizeData.leaderboard.map((p,i) => (
+            <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
+                <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
+                  <span style={{ color:C.green }}>Won £{p.won%1===0?p.won:p.won.toFixed(2)}</span>
+                  <span style={{ color:C.muted }}>Spent £{p.spent}</span>
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, minWidth:60, textAlign:"right", color:p.net>0?C.green:p.net<0?C.red:C.muted }}>
+                    {p.net>0?"+":""}£{p.net%1===0?p.net:p.net.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ROUND BY ROUND</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+          {prizeData.games.map(g => {
+            const isInProgress = g.outcome==="inprogress";
+            const isRollover = g.outcome==="rollover";
+            const outcomeColor = isInProgress?C.amber:isRollover?C.accent:C.green;
+            const outcomeLabel = isInProgress?"🟡 In Progress":isRollover?"🔄 Rollover":g.winners.length===1?`🏆 ${g.winners[0]}`:`🤝 ${g.winners.join(" & ")}`;
+            return (
+              <div key={g.season+g.game} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"10px 12px" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:11, fontWeight:600, color:C.text }}>{g.season==="2024"?"24/25":"25/26"} {g.game.replace("Game","Round")}</div>
+                    <div style={{ fontSize:10, color:outcomeColor, marginTop:2 }}>{outcomeLabel}</div>
+                  </div>
+                  <div style={{ textAlign:"right" }}>
+                    <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:isInProgress?C.amber:C.green, lineHeight:1 }}>£{g.totalPot}</div>
+                    <div style={{ fontSize:8, color:C.muted, letterSpacing:1, textTransform:"uppercase" }}>{isInProgress?"current pot":isRollover?"rolled over":"prize pot"}</div>
                   </div>
                 </div>
-              ))}
-            </div>
-            <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>GAME BY GAME</div>
-            <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-              {prizeData.games.map(g => {
-                const isInProgress = g.outcome==="inprogress";
-                const isRollover = g.outcome==="rollover";
-                const outcomeColor = isInProgress?C.amber:isRollover?C.accent:C.green;
-                const outcomeLabel = isInProgress?"🟡 In Progress":isRollover?"🔄 Rollover":g.winners.length===1?`🏆 ${g.winners[0]}`:`🤝 ${g.winners.join(" & ")}`;
-                return (
-                  <div key={g.season+g.game} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"10px 12px" }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
-                      <div style={{ flex:1 }}>
-<div style={{ fontSize:11, fontWeight:600, color:C.text }}>{g.season === "2024" ? "24/25" : "25/26"} {g.game.replace("Game","Round")}</div>
-                        <div style={{ fontSize:10, color:outcomeColor, marginTop:2 }}>{outcomeLabel}</div>
-                      </div>
-                      <div style={{ textAlign:"right" }}>
-                        <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:isInProgress?C.amber:C.green, lineHeight:1 }}>£{g.totalPot}</div>
-                        <div style={{ fontSize:8, color:C.muted, letterSpacing:1, textTransform:"uppercase" }}>{isInProgress?"current pot":isRollover?"rolled over":"prize pot"}</div>
-                      </div>
-                    </div>
-                    <div style={{ display:"flex", gap:12, fontSize:10, color:C.muted, flexWrap:"wrap" }}>
-                      <span>{g.entrants} x £10 = <strong style={{ color:C.text }}>£{g.gamePot}</strong></span>
-                      {g.rolledOver===0&&!isInProgress&&!isRollover&&g.totalPot>g.gamePot&&<span>+ rollover <strong style={{ color:C.text }}>£{g.totalPot-g.gamePot}</strong></span>}
-                      {isRollover&&<span style={{ color:C.accent }}>Carries to next game</span>}
-                      {!isInProgress&&!isRollover&&g.winners.length>1&&(
-                        <span>Each: <strong style={{ color:C.green }}>£{(g.totalPot/g.winners.length)%1===0?g.totalPot/g.winners.length:(g.totalPot/g.winners.length).toFixed(2)}</strong></span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+                <div style={{ display:"flex", gap:12, fontSize:10, color:C.muted, flexWrap:"wrap" }}>
+                  <span>{g.entrants} x £10 = <strong style={{ color:C.text }}>£{g.gamePot}</strong></span>
+                  {g.rolledOver===0&&!isInProgress&&!isRollover&&g.totalPot>g.gamePot&&<span>+ rollover <strong style={{ color:C.text }}>£{g.totalPot-g.gamePot}</strong></span>}
+                  {isRollover&&<span style={{ color:C.accent }}>Carries to next round</span>}
+                  {!isInProgress&&!isRollover&&g.winners.length>1&&(
+                    <span>Each: <strong style={{ color:C.green }}>£{(g.totalPot/g.winners.length)%1===0?g.totalPot/g.winners.length:(g.totalPot/g.winners.length).toFixed(2)}</strong></span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  );
-}
+    )}
+
+    {prizeTab==="gg" && (
+      <div>
+        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>GOAL GUESS — ALL TIME</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+          {[...overallStats].filter(p => p.gg > 0).sort((a,b) => b.gg - a.gg).map((p,i) => (
+            <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
+                <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
+                  <span style={{ color:C.muted }}>🎯 {p.ggWins} {p.ggWins===1?"win":"wins"}</span>
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.gg.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {prizeTab==="ss" && (
+      <div>
+        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>SWEEPSTAKE — ALL TIME</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+          {[...overallStats].filter(p => p.ss > 0).sort((a,b) => b.ss - a.ss).map((p,i) => (
+            <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
+                <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
+                  <span style={{ color:C.muted }}>🎟 {p.ssWins} {p.ssWins===1?"win":"wins"}</span>
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.ss.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+)}
