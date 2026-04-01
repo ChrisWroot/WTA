@@ -662,8 +662,8 @@ export default function App() {
         {activeTab==="prize" && (
           <div>
             <div style={{ display:"flex", gap:0, marginBottom:16, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
-{[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","WTA 24/25-25/26"],["gg","Goal Guess"],["ss","Sweepstake"],["wroot","Wroot %"]].map(([v,l]) => (
-              <button key={v} onClick={()=>setPrizeTab(v)} style={{
+              {[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","WTA 24/25-25/26"],["gg","Goal Guess"],["ss","Sweepstake"],["wroot","Wroot %"]].map(([v,l]) => (
+                <button key={v} onClick={()=>setPrizeTab(v)} style={{
                   padding:"9px 12px", cursor:"pointer", fontFamily:"inherit",
                   fontSize:9, letterSpacing:1.2, textTransform:"uppercase", border:"none",
                   background:prizeTab===v?"#0f2050":"transparent",
@@ -673,15 +673,6 @@ export default function App() {
                 }}>{l}</button>
               ))}
             </div>
-{(() => {
-              const grandTotal = overallStats.reduce((a, p) => a + p.total, 0);
-              return grandTotal > 0 ? (
-                <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", justifyContent:"space-between" }) }}>
-                  <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, textTransform:"uppercase" }}>Total Prize Money Awarded</div>
-                  <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.green }}>£{grandTotal.toFixed(2)}</div>
-                </div>
-              ) : null;
-            })()}
 
             {prizeTab==="total" && (
               <div>
@@ -820,6 +811,7 @@ export default function App() {
                 </div>
               </div>
             )}
+
             {prizeTab==="wroot" && (
               <div>
                 <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:14 }}>WROOT FAMILY % OF TOTAL PRIZE POT</div>
@@ -866,8 +858,6 @@ export default function App() {
                 })()}
               </div>
             )}
-          </div>
-        )}
           </div>
         )}
       </div>
