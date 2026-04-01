@@ -684,7 +684,6 @@ export default function App() {
     })()}
 
     {prizeTab==="total" && (
-            {prizeTab==="total" && (
               <div>
                 <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ALL TIME TOTAL PRIZE MONEY</div>
                 <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
