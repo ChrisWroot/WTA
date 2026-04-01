@@ -112,8 +112,8 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
     ["2024", "2025"].forEach(s => {
       Object.entries(allData[s]).forEach(([game, gd]) => {
         (gd.picks[historyPlayer] || []).forEach(pk => {
-          if (pk.t === "NP") return;
-          if (!teamMap[pk.t]) teamMap[pk.t] = { team: pk.t, picked: 0, wins: 0, losses: 0, usages: [] };
+  if (pk.np) return;
+  if (!teamMap[pk.t]) teamMap[pk.t] = { team: pk.t, picked: 0, wins: 0, losses: 0, usages: [] };
           teamMap[pk.t].picked++;
           if (pk.w === true) teamMap[pk.t].wins++;
           else if (pk.w === false) teamMap[pk.t].losses++;
@@ -137,10 +137,10 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
           if (!picks || picks.length === 0) return;
           gamesPlayed++;
           picks.forEach(pk => {
-            if (pk.t === "NP") return;
-            if (pk.w === true) wins++;
-            else if (pk.w === false) losses++;
-          });
+  if (pk.np) return;
+  if (pk.w === true) wins++;
+  else if (pk.w === false) losses++;
+});
         });
       });
       const total = wins + losses;
