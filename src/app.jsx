@@ -806,17 +806,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
                 <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
                   <span style={{ color:C.muted }}>🎟 {p.ssWins} {p.ssWins===1?"win":"wins"}</span>
                   <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.ss.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-  </div>
-)}
-)}
-  </div>
+                  </div>
 )}
     </div>
   );
