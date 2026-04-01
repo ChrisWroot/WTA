@@ -297,7 +297,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
 
       <div style={{ maxWidth:1000, margin:"0 auto", padding:"16px" }}>
         <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
-          {games.map(g => <button key={g} style={pill(selectedGame===g)} onClick={()=>setSelectedGame(g)}>{g}</button>)}
+        {games.map(g => <button key={g} style={pill(selectedGame===g)} onClick={()=>setSelectedGame(g)}>{g.replace("Game", "Round")}</button>)}
         </div>
 
         <div style={{ display:"flex", borderBottom:`1px solid ${C.border}`, marginBottom:18, overflowX:"auto" }}>
@@ -330,8 +330,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
                   <tr>
                     <th style={{ textAlign:"left", padding:"6px 10px", color:C.muted, fontSize:9, fontWeight:400, borderBottom:`1px solid ${C.border}`, position:"sticky", left:0, background:C.bg, minWidth:80, zIndex:2 }}>PLAYER</th>
                     {rounds.map(r => (
-                      <th key={r} style={{ padding:"6px 3px", color:C.muted, fontSize:9, fontWeight:400, borderBottom:`1px solid ${C.border}`, textAlign:"center", minWidth:44 }}>R{r}</th>
-                    ))}
+  <th key={r} style={{ padding:"6px 3px", color:C.muted, fontSize:9, fontWeight:400, borderBottom:`1px solid ${C.border}`, textAlign:"center", minWidth:44 }}>GW{r}</th>                  ))}
                     <th style={{ padding:"6px 6px", color:C.muted, fontSize:9, fontWeight:400, borderBottom:`1px solid ${C.border}`, textAlign:"center" }}>STATUS</th>
                   </tr>
                 </thead>
@@ -445,7 +444,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
                           <td style={{ padding:"6px 10px" }}>
                             <div style={{ display:"flex", gap:3, flexWrap:"wrap" }}>
                               {dots.map((w,j) => (
-                                <span key={j} title={usages[j]?`${usages[j].season} ${usages[j].game} R${usages[j].round}`:""} style={{ width:7, height:7, borderRadius:"50%", background:w?C.green:C.red, display:"inline-block", flexShrink:0, opacity:0.9 }}/>
+                                <span key={j} title={usages[j]?`${usages[j].season} ${usages[j].game.replace("Game","Round")} GW${usages[j].round}`:""} style={{ width:7, height:7, borderRadius:"50%", background:w?C.green:C.red, display:"inline-block", flexShrink:0, opacity:0.9 }}/>
                               ))}
                             </div>
                           </td>
