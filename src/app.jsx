@@ -497,6 +497,39 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
 
     {historyMode==="team" && (
       <div>
+<div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden", marginBottom:14 }}>
+  <table style={{ borderCollapse:"collapse", width:"100%", fontSize:10 }}>
+    <thead>
+      <tr style={{ background:"#060a12" }}>
+        {[["TEAM","left","10px"],["PICKED","center","6px"],["W","center","6px"],["L","center","6px"],["RATE","left","8px"],["% ","right","8px"]].map(([h,a,p]) => (
+          <th key={h} style={{ padding:`7px ${p}`, textAlign:a, color:C.muted, fontSize:8, fontWeight:400, letterSpacing:1.2, borderBottom:`1px solid ${C.border}` }}>{h}</th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {Object.entries(teamStats)
+        .map(([team, td]) => ({ team, ...td, pct: td.total > 0 ? Math.round(td.wins / td.total * 100) : 0 }))
+        .sort((a, b) => b.pct - a.pct || b.total - a.total)
+        .map(({ team, total, wins, losses, pct }) => {
+          const barColor = pct>=80?C.green:pct>=60?"#84cc16":pct>=40?C.amber:C.red;
+          return (
+            <tr key={team} style={{ borderBottom:"1px solid #0d1a2e", cursor:"pointer" }} onClick={()=>setTeamView(team)}>
+              <td style={{ padding:"6px 10px", whiteSpace:"nowrap" }}><span style={tbadge(team)}>{team}</span></td>
+              <td style={{ padding:"6px 6px", textAlign:"center", color:C.muted }}>{total}</td>
+              <td style={{ padding:"6px 6px", textAlign:"center", color:C.green, fontWeight:600 }}>{wins}</td>
+              <td style={{ padding:"6px 6px", textAlign:"center", color:C.red, fontWeight:600 }}>{losses}</td>
+              <td style={{ padding:"6px 8px", minWidth:80 }}>
+                <div style={{ height:4, background:"#111d30", borderRadius:2, overflow:"hidden" }}>
+                  <div style={{ height:"100%", width:`${pct}%`, background:barColor, borderRadius:2 }}/>
+                </div>
+              </td>
+              <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:barColor, whiteSpace:"nowrap" }}>{pct}%</td>
+            </tr>
+          );
+        })}
+    </tbody>
+  </table>
+</div>
         <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:14 }}>
           {Object.keys(teamStats).sort().map(t => (
             <button key={t} style={pill(teamView===t)} onClick={()=>setTeamView(t)}>{t}</button>
