@@ -89,12 +89,19 @@ export default function App() {
   const gameData = allData[season][selectedGame];
   const rounds = gameData ? gameData.rounds : [];
 
-  const entrants = useMemo(() => {
-    if (!gameData) return [];
-    return Object.entries(gameData.picks).map(([player, picks]) => ({
-      player, picks, eliminated: picks.some(p => p.w === false),
-    }));
-  }, [gameData]);
+ const entrants = useMemo(() => {
+  if (!gameData) return [];
+  return Object.entries(gameData.picks).map(([player, picks]) => ({
+    player, picks, eliminated: picks.some(p => p.w === false),
+    roundsLasted: picks.filter(p => p.w !== null).length,
+  })).sort((a, b) => {
+    if (!a.eliminated && !b.eliminated) return a.player.localeCompare(b.player);
+    if (!a.eliminated) return -1;
+    if (!b.eliminated) return 1;
+    return b.roundsLasted - a.roundsLasted || a.player.localeCompare(b.player);
+  });
+}, [gameData]);
+
 
   const survivors = useMemo(() => getGameOutcome(gameData ? gameData.picks : {}), [gameData]);
 
