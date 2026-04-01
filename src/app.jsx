@@ -77,6 +77,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
   const [activeTab, setActiveTab] = useState("grid");
   const [historyPlayer, setHistoryPlayer] = useState("Ed");
   const [recordsTab, setRecordsTab] = useState("best");
+  const [teamView, setTeamView] = useState("ARS");
 
   useEffect(() => {
     fetchSheetData()
@@ -153,6 +154,28 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
     }).filter(p => p.total > 0);
   }, [allData]);
 
+  const teamStats = useMemo(() => {
+  const teams = {};
+  ["2024","2025"].forEach(s => {
+    Object.values(allData[s]).forEach(gd => {
+      Object.entries(gd.picks).forEach(([player, picks]) => {
+        picks.forEach(pk => {
+          if (pk.np || pk.t === "NP") return;
+          if (!teams[pk.t]) teams[pk.t] = { team: pk.t, total: 0, wins: 0, losses: 0, players: {} };
+          teams[pk.t].total++;
+          if (pk.w === true) teams[pk.t].wins++;
+          else if (pk.w === false) teams[pk.t].losses++;
+          if (!teams[pk.t].players[player]) teams[pk.t].players[player] = { picked: 0, wins: 0, losses: 0, dots: [] };
+          teams[pk.t].players[player].picked++;
+          if (pk.w === true) teams[pk.t].players[player].wins++;
+          else if (pk.w === false) teams[pk.t].players[player].losses++;
+          teams[pk.t].players[player].dots.push(pk.w);
+        });
+      });
+    });
+  });
+  return teams;
+}, [allData]);
   const teamRecords = useMemo(() => {
     const combos = {};
     ["2024", "2025"].forEach(s => {
@@ -294,7 +317,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
       
 
         <div style={{ display:"flex", borderBottom:`1px solid ${C.border}`, marginBottom:18, overflowX:"auto" }}>
-          {[["grid","Picks Grid"],["success","Success Rate"],["history","Player History"],["records","Records"],["prize","Prize Money"]].map(([v,l]) => (
+          {[["grid","Picks Grid"],["success","Success Rate"],["history","Player History"],["records","Records"],["teams","Teams"],["prize","Prize Money"]].map(([v,l]) => (
             <button key={v} style={tabBtn(activeTab===v)} onClick={()=>setActiveTab(v)}>{l}</button>
           ))}
         </div>
@@ -507,7 +530,81 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
             </div>
           </div>
         )}
-
+{activeTab==="teams" && (
+  <div>
+    <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:16 }}>
+      {Object.keys(teamStats).sort().map(t => (
+        <button key={t} style={pill(teamView===t)} onClick={()=>setTeamView(t)}>{t}</button>
+      ))}
+    </div>
+    {teamStats[teamView] && (() => {
+      const td = teamStats[teamView];
+      const pct = td.total > 0 ? Math.round(td.wins / td.total * 100) : 0;
+      const barColor = pct>=80?C.green:pct>=60?"#84cc16":pct>=40?C.amber:C.red;
+      const players = Object.entries(td.players)
+        .map(([player, v]) => ({ player, ...v, pct: v.picked > 0 ? Math.round(v.wins / v.picked * 100) : 0 }))
+        .sort((a, b) => b.pct - a.pct || b.picked - a.picked);
+      return (
+        <div>
+          <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>{ABBR_FULL[teamView]||teamView} — all players</div>
+              <div style={{ height:5, background:"#111d30", borderRadius:3, overflow:"hidden", marginTop:8 }}>
+                <div style={{ height:"100%", width:`${pct}%`, background:barColor, borderRadius:3 }}/>
+              </div>
+            </div>
+            <div style={{ display:"flex", gap:16 }}>
+              {[{l:"Picked",v:td.total,c:C.accent},{l:"Wins",v:td.wins,c:C.green},{l:"Losses",v:td.losses,c:C.red},{l:"Win %",v:pct+"%",c:barColor}].map(s=>(
+                <div key={s.l} style={{ textAlign:"center" }}>
+                  <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, color:s.c, lineHeight:1 }}>{s.v}</div>
+                  <div style={{ fontSize:8, color:C.muted, letterSpacing:1.2, textTransform:"uppercase" }}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
+            <table style={{ borderCollapse:"collapse", width:"100%", fontSize:10 }}>
+              <thead>
+                <tr style={{ background:"#060a12" }}>
+                  {[["PLAYER","left","10px"],["×","center","6px"],["W","center","6px"],["L","center","6px"],["RATE","left","8px"],["% ","right","8px"],["HISTORY","left","10px"]].map(([h,a,p]) => (
+                    <th key={h} style={{ padding:`7px ${p}`, textAlign:a, color:C.muted, fontSize:8, fontWeight:400, letterSpacing:1.2, borderBottom:`1px solid ${C.border}` }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {players.map(({player, picked, wins, losses, dots, pct}) => {
+                  const barColor = pct===100?C.green:pct>50?"#84cc16":C.amber;
+                  return (
+                    <tr key={player} style={{ borderBottom:"1px solid #0d1a2e" }}>
+                      <td style={{ padding:"6px 10px", fontWeight:500, color:C.text, fontSize:11 }}>{player}</td>
+                      <td style={{ padding:"6px 6px", textAlign:"center", color:C.muted }}>{picked}</td>
+                      <td style={{ padding:"6px 6px", textAlign:"center", color:C.green, fontWeight:600 }}>{wins}</td>
+                      <td style={{ padding:"6px 6px", textAlign:"center", color:C.red, fontWeight:600 }}>{losses}</td>
+                      <td style={{ padding:"6px 8px", minWidth:80 }}>
+                        <div style={{ height:4, background:"#111d30", borderRadius:2, overflow:"hidden" }}>
+                          <div style={{ height:"100%", width:`${pct}%`, background:barColor, borderRadius:2 }}/>
+                        </div>
+                      </td>
+                      <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:barColor, whiteSpace:"nowrap" }}>{pct}%</td>
+                      <td style={{ padding:"6px 10px" }}>
+                        <div style={{ display:"flex", gap:3, flexWrap:"wrap" }}>
+                          {dots.map((w,j) => (
+                            <span key={j} style={{ width:7, height:7, borderRadius:"50%", background:w===true?C.green:w===false?C.red:C.amber, display:"inline-block", flexShrink:0, opacity:0.9 }}/>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    })()}
+  </div>
+)}
+        
         {activeTab==="prize" && (
           <div>
             <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>NET WINNINGS LEADERBOARD</div>
