@@ -248,13 +248,14 @@ export default function App() {
     minWidth:34, justifyContent:"center",
   });
 
-  const pickCell = (pk) => ({
-    display:"inline-flex", alignItems:"center", justifyContent:"center",
-    padding:"2px 5px", borderRadius:4, fontSize:10, fontWeight:600, minWidth:36,
-    background:pk.w===true?"#14532d":pk.w===false?"#450a0a":"#1a2a45",
-    color:pk.w===true?"#4ade80":pk.w===false?"#fca5a5":C.muted,
-    border:`1px solid ${pk.w===true?"#16653490":pk.w===false?"#7f1d1d90":"#2a3a55"}`,
-  });
+   const pickCell = (pk) => ({
+  display:"inline-flex", alignItems:"center", justifyContent:"center",
+  padding:"2px 5px", borderRadius:4, fontSize:10, fontWeight:600, minWidth:36,
+  background:pk.w===true?"#14532d":pk.w===false?"#450a0a":"#1a2a45",
+  color:pk.w===true?"#4ade80":pk.w===false?"#fca5a5":C.amber,
+  border:`1px solid ${pk.w===true?"#16653490":pk.w===false?"#7f1d1d90":"#f59e0b40"}`,
+});
+
 
   return (
     <div style={{ fontFamily:"'DM Mono','Courier New',monospace", background:C.bg, minHeight:"100vh", color:C.text }}>
