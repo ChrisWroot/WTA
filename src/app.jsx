@@ -528,7 +528,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
                     <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
                       <span style={{ color:C.green }}>Won £{p.won%1===0?p.won:p.won.toFixed(2)}</span>
                       <span style={{ color:C.muted }}>Spent £{p.spent}</span>
-                      <span style={{ color:C.muted }}>{p.gamesEntered}g</span>
+<span style={{ color:C.muted }}>{p.gamesEntered}r</span>
                       <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, minWidth:60, textAlign:"right", color:p.net>0?C.green:p.net<0?C.red:C.muted }}>
                         {p.net>0?"+":""}£{p.net%1===0?p.net:p.net.toFixed(2)}
                       </span>
