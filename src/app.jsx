@@ -65,8 +65,10 @@ export default function App() {
   const [allData, setAllData] = useState(STATIC_DATA);
   const [loading, setLoading] = useState(true);
   const [liveError, setLiveError] = useState(false);
-  const [season, setSeason] = useState("2025");
-  const [selectedGame, setSelectedGame] = useState("Game 1");
+  const lastSeason = Object.keys(STATIC_DATA).at(-1);
+const lastGame = Object.keys(STATIC_DATA[lastSeason]).at(-1);
+const [season, setSeason] = useState(lastSeason);
+const [selectedGame, setSelectedGame] = useState(lastGame);
   const [activeTab, setActiveTab] = useState("grid");
   const [historyPlayer, setHistoryPlayer] = useState("Ed");
   const [successSort, setSuccessSort] = useState("pct");
