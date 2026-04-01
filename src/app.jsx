@@ -296,9 +296,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
       </div>
 
       <div style={{ maxWidth:1000, margin:"0 auto", padding:"16px" }}>
-        <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
-        {games.map(g => <button key={g} style={pill(selectedGame===g)} onClick={()=>setSelectedGame(g)}>{g.replace("Game", "Round")}</button>)}
-        </div>
+      
 
         <div style={{ display:"flex", borderBottom:`1px solid ${C.border}`, marginBottom:18, overflowX:"auto" }}>
           {[["grid","Picks Grid"],["success","Success Rate"],["history","Player History"],["records","Records"],["prize","Prize Money"]].map(([v,l]) => (
@@ -306,8 +304,12 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
           ))}
         </div>
 
-        {activeTab==="grid" && gameData && (
-          <div>
+        {activeTab==="grid" && (
+  <div>
+    <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
+      {games.map(g => <button key={g} style={pill(selectedGame===g)} onClick={()=>setSelectedGame(g)}>{g.replace("Game","Round")}</button>)}
+    </div>
+    {gameData && <div>
             <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
               <div>
                 <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>Game Outcome</div>
@@ -357,7 +359,8 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
                 </tbody>
               </table>
             </div>
-          </div>
+          </div>}
+        </div>
         )}
 
         {activeTab==="success" && (
