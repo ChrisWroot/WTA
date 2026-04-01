@@ -42,11 +42,11 @@ function parseSheetData(formattedRows) {
           if (!roundNum) continue;
           const cellVal = playerRow[c]?.userEnteredValue?.stringValue;
           if (!cellVal || cellVal.trim() === "") continue;
-const trimmed = cellVal.trim().toLowerCase();
-if (trimmed === "-" || trimmed === "np") {
-  playerPicks.push({ r: Math.round(roundNum), t: "NP", w: false, np: true });
-  continue;
-}
+          const trimmed = cellVal.trim().toLowerCase();
+          if (trimmed === "-" || trimmed === "np") {
+            playerPicks.push({ r: Math.round(roundNum), t: "NP", w: false, np: true });
+            continue;
+          }
           const t = cellVal.trim();
           const color = getCellColor(playerRow, c);
           const w = color === "green" ? true : color === "red" ? false : null;
@@ -71,9 +71,9 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [liveError, setLiveError] = useState(false);
   const lastSeason = Object.keys(STATIC_DATA).at(-1);
-const lastGame = Object.keys(STATIC_DATA[lastSeason]).at(-1);
-const [season, setSeason] = useState(lastSeason);
-const [selectedGame, setSelectedGame] = useState(lastGame);
+  const lastGame = Object.keys(STATIC_DATA[lastSeason]).at(-1);
+  const [season, setSeason] = useState(lastSeason);
+  const [selectedGame, setSelectedGame] = useState(lastGame);
   const [activeTab, setActiveTab] = useState("grid");
   const [historyPlayer, setHistoryPlayer] = useState("Ed");
   const [recordsTab, setRecordsTab] = useState("best");
@@ -83,36 +83,35 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
   const [prizeTab, setPrizeTab] = useState("total");
 
   useEffect(() => {
-  Promise.all([fetchSheetData(), fetchOverallStats()])
-    .then(([sheetData, stats]) => {
-      const parsed = parseSheetData(sheetData);
-      const hasData = Object.values(parsed).some(season =>
-        Object.values(season).some(game => Object.keys(game.picks).length > 0)
-      );
-      if (hasData) setAllData(parsed);
-      if (stats.length > 0) setOverallStats(stats);
-      setLoading(false);
-    })
-    .catch(() => { setLiveError(true); setLoading(false); });
-}, []);
+    Promise.all([fetchSheetData(), fetchOverallStats()])
+      .then(([sheetData, stats]) => {
+        const parsed = parseSheetData(sheetData);
+        const hasData = Object.values(parsed).some(s =>
+          Object.values(s).some(game => Object.keys(game.picks).length > 0)
+        );
+        if (hasData) setAllData(parsed);
+        if (stats.length > 0) setOverallStats(stats);
+        setLoading(false);
+      })
+      .catch(() => { setLiveError(true); setLoading(false); });
+  }, []);
 
   const games = Object.keys(allData[season]);
   const gameData = allData[season][selectedGame];
   const rounds = gameData ? gameData.rounds : [];
 
- const entrants = useMemo(() => {
-  if (!gameData) return [];
-  return Object.entries(gameData.picks).map(([player, picks]) => ({
-    player, picks, eliminated: picks.some(p => p.w === false),
-    roundsLasted: picks.filter(p => p.w !== null).length,
-  })).sort((a, b) => {
-    if (!a.eliminated && !b.eliminated) return a.player.localeCompare(b.player);
-    if (!a.eliminated) return -1;
-    if (!b.eliminated) return 1;
-    return b.roundsLasted - a.roundsLasted || a.player.localeCompare(b.player);
-  });
-}, [gameData]);
-
+  const entrants = useMemo(() => {
+    if (!gameData) return [];
+    return Object.entries(gameData.picks).map(([player, picks]) => ({
+      player, picks, eliminated: picks.some(p => p.w === false),
+      roundsLasted: picks.filter(p => p.w !== null).length,
+    })).sort((a, b) => {
+      if (!a.eliminated && !b.eliminated) return a.player.localeCompare(b.player);
+      if (!a.eliminated) return -1;
+      if (!b.eliminated) return 1;
+      return b.roundsLasted - a.roundsLasted || a.player.localeCompare(b.player);
+    });
+  }, [gameData]);
 
   const survivors = useMemo(() => getGameOutcome(gameData ? gameData.picks : {}), [gameData]);
 
@@ -121,8 +120,8 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
     ["2024", "2025"].forEach(s => {
       Object.entries(allData[s]).forEach(([game, gd]) => {
         (gd.picks[historyPlayer] || []).forEach(pk => {
-  if (pk.np) return;
-  if (!teamMap[pk.t]) teamMap[pk.t] = { team: pk.t, picked: 0, wins: 0, losses: 0, usages: [] };
+          if (pk.np) return;
+          if (!teamMap[pk.t]) teamMap[pk.t] = { team: pk.t, picked: 0, wins: 0, losses: 0, usages: [] };
           teamMap[pk.t].picked++;
           if (pk.w === true) teamMap[pk.t].wins++;
           else if (pk.w === false) teamMap[pk.t].losses++;
@@ -146,10 +145,10 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
           if (!picks || picks.length === 0) return;
           gamesPlayed++;
           picks.forEach(pk => {
-  if (pk.np) return;
-  if (pk.w === true) wins++;
-  else if (pk.w === false) losses++;
-});
+            if (pk.np) return;
+            if (pk.w === true) wins++;
+            else if (pk.w === false) losses++;
+          });
         });
       });
       const total = wins + losses;
@@ -159,27 +158,28 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
   }, [allData]);
 
   const teamStats = useMemo(() => {
-  const teams = {};
-  ["2024","2025"].forEach(s => {
-    Object.values(allData[s]).forEach(gd => {
-      Object.entries(gd.picks).forEach(([player, picks]) => {
-        picks.forEach(pk => {
-          if (pk.np || pk.t === "NP") return;
-          if (!teams[pk.t]) teams[pk.t] = { team: pk.t, total: 0, wins: 0, losses: 0, players: {} };
-          teams[pk.t].total++;
-          if (pk.w === true) teams[pk.t].wins++;
-          else if (pk.w === false) teams[pk.t].losses++;
-          if (!teams[pk.t].players[player]) teams[pk.t].players[player] = { picked: 0, wins: 0, losses: 0, dots: [] };
-          teams[pk.t].players[player].picked++;
-          if (pk.w === true) teams[pk.t].players[player].wins++;
-          else if (pk.w === false) teams[pk.t].players[player].losses++;
-          teams[pk.t].players[player].dots.push(pk.w);
+    const teams = {};
+    ["2024","2025"].forEach(s => {
+      Object.values(allData[s]).forEach(gd => {
+        Object.entries(gd.picks).forEach(([player, picks]) => {
+          picks.forEach(pk => {
+            if (pk.np || pk.t === "NP") return;
+            if (!teams[pk.t]) teams[pk.t] = { team: pk.t, total: 0, wins: 0, losses: 0, players: {} };
+            teams[pk.t].total++;
+            if (pk.w === true) teams[pk.t].wins++;
+            else if (pk.w === false) teams[pk.t].losses++;
+            if (!teams[pk.t].players[player]) teams[pk.t].players[player] = { picked: 0, wins: 0, losses: 0, dots: [] };
+            teams[pk.t].players[player].picked++;
+            if (pk.w === true) teams[pk.t].players[player].wins++;
+            else if (pk.w === false) teams[pk.t].players[player].losses++;
+            teams[pk.t].players[player].dots.push(pk.w);
+          });
         });
       });
     });
-  });
-  return teams;
-}, [allData]);
+    return teams;
+  }, [allData]);
+
   const teamRecords = useMemo(() => {
     const combos = {};
     ["2024", "2025"].forEach(s => {
@@ -281,14 +281,13 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
     minWidth:34, justifyContent:"center",
   });
 
-   const pickCell = (pk) => ({
-  display:"inline-flex", alignItems:"center", justifyContent:"center",
-  padding:"2px 5px", borderRadius:4, fontSize:10, fontWeight:600, minWidth:36,
-  background:pk.w===true?"#14532d":pk.w===false?"#450a0a":"#1a2a45",
-  color:pk.w===true?"#4ade80":pk.w===false?"#fca5a5":C.amber,
-  border:`1px solid ${pk.w===true?"#16653490":pk.w===false?"#7f1d1d90":"#f59e0b40"}`,
-});
-
+  const pickCell = (pk) => ({
+    display:"inline-flex", alignItems:"center", justifyContent:"center",
+    padding:"2px 5px", borderRadius:4, fontSize:10, fontWeight:600, minWidth:36,
+    background:pk.w===true?"#14532d":pk.w===false?"#450a0a":"#1a2a45",
+    color:pk.w===true?"#4ade80":pk.w===false?"#fca5a5":C.amber,
+    border:`1px solid ${pk.w===true?"#16653490":pk.w===false?"#7f1d1d90":"#f59e0b40"}`,
+  });
 
   return (
     <div style={{ fontFamily:"'DM Mono','Courier New',monospace", background:C.bg, minHeight:"100vh", color:C.text }}>
@@ -312,14 +311,11 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             {loading && <span style={{ fontSize:9, color:C.amber }}>⟳ syncing...</span>}
             {liveError && <span style={{ fontSize:9, color:C.muted }}>offline mode</span>}
-            
           </div>
         </div>
       </div>
 
       <div style={{ maxWidth:1000, margin:"0 auto", padding:"16px" }}>
-      
-
         <div style={{ display:"flex", borderBottom:`1px solid ${C.border}`, marginBottom:18, overflowX:"auto" }}>
           {[["grid","Picks Grid"],["success","Success Rate"],["history","Pick History"],["records","Records"],["prize","Prize Money"]].map(([v,l]) => (
             <button key={v} style={tabBtn(activeTab===v)} onClick={()=>setActiveTab(v)}>{l}</button>
@@ -327,77 +323,80 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
         </div>
 
         {activeTab==="grid" && (
-  <div>
-    <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}>
-      {["2024","2025"].map(s => (
-        <button key={s} style={pill(season===s)} onClick={()=>{ setSeason(s); setSelectedGame(Object.keys(allData[s])[0]); }}>
-          {s === "2024" ? "24/25" : "25/26"}
-        </button>
-      ))}
-    </div>
-    <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
-      {games.map(g => <button key={g} style={pill(selectedGame===g)} onClick={()=>setSelectedGame(g)}>{g.replace("Game","Round")}</button>)}
-    </div>
-    {gameData && <div>
-            <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
+          <div>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}>
+              {["2024","2025"].map(s => (
+                <button key={s} style={pill(season===s)} onClick={()=>{ setSeason(s); setSelectedGame(Object.keys(allData[s])[0]); }}>
+                  {s === "2024" ? "24/25" : "25/26"}
+                </button>
+              ))}
+            </div>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
+              {games.map(g => <button key={g} style={pill(selectedGame===g)} onClick={()=>setSelectedGame(g)}>{g.replace("Game","Round")}</button>)}
+            </div>
+            {gameData && (
               <div>
-<div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>Round Outcome</div>
-                <div style={{ fontSize:11, color:season==="2025"&&selectedGame==="Game 10"?C.amber:survivors.length===0?C.red:C.green, fontWeight:500 }}>
-                  {season==="2025"&&selectedGame==="Game 10"?"🟡 In progress":survivors.length===0?"🔴 Rollover — no survivors":survivors.length===1?"🏆 Winner: "+survivors[0]:"🤝 Split: "+survivors.join(" & ")}
+                <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
+                  <div>
+                    <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>Round Outcome</div>
+                    <div style={{ fontSize:11, color:season==="2025"&&selectedGame==="Game 10"?C.amber:survivors.length===0?C.red:C.green, fontWeight:500 }}>
+                      {season==="2025"&&selectedGame==="Game 10"?"🟡 In progress":survivors.length===0?"🔴 Rollover — no survivors":survivors.length===1?"🏆 Winner: "+survivors[0]:"🤝 Split: "+survivors.join(" & ")}
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", gap:16, marginLeft:"auto" }}>
+                    {[{l:"Entered",v:entrants.length,c:C.accent},{l:"Survived",v:survivors.length,c:C.green},{l:"Eliminated",v:entrants.filter(e=>e.eliminated).length,c:C.red}].map(s=>(
+                      <div key={s.l} style={{ textAlign:"center" }}>
+                        <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:s.c, lineHeight:1 }}>{s.v}</div>
+                        <div style={{ fontSize:8, color:C.muted, letterSpacing:1.2, textTransform:"uppercase" }}>{s.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ overflowX:"auto" }}>
+                  <table style={{ borderCollapse:"collapse", width:"100%", fontSize:11 }}>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign:"left", padding:"6px 10px", color:C.muted, fontSize:9, fontWeight:400, borderBottom:`1px solid ${C.border}`, position:"sticky", left:0, background:C.bg, minWidth:80, zIndex:2 }}>PLAYER</th>
+                        {rounds.map(r => (
+                          <th key={r} style={{ padding:"6px 3px", color:C.muted, fontSize:9, fontWeight:400, borderBottom:`1px solid ${C.border}`, textAlign:"center", minWidth:44 }}>GW{r}</th>
+                        ))}
+                        <th style={{ padding:"6px 6px", color:C.muted, fontSize:9, fontWeight:400, borderBottom:`1px solid ${C.border}`, textAlign:"center" }}>STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {entrants.map(({player,picks,eliminated}) => (
+                        <tr key={player}>
+                          <td style={{ padding:"5px 10px", borderBottom:"1px solid #0d1a2e", position:"sticky", left:0, background:C.surface, zIndex:1, fontWeight:500, color:eliminated?C.muted:C.text, whiteSpace:"nowrap", fontSize:11 }}>{player}</td>
+                          {rounds.map(r => {
+                            const pk = picks.find(p => p.r===r);
+                            return (
+                              <td key={r} style={{ padding:"3px 2px", borderBottom:"1px solid #0d1a2e", textAlign:"center" }}>
+                                {pk ? (pk.t==="NP" ?
+                                  <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", padding:"2px 5px", borderRadius:4, fontSize:9, fontWeight:600, minWidth:34, background:"#2a1a00", color:C.amber, border:"1px solid #7f4f0090" }}>N/P</span>
+                                  : <span style={pickCell(pk)}>{pk.t}</span>)
+                                  : <span style={{ color:"#1e2d45" }}>—</span>}
+                              </td>
+                            );
+                          })}
+                          <td style={{ padding:"4px 6px", borderBottom:"1px solid #0d1a2e", textAlign:"center" }}>
+                            <span style={{ fontSize:8, letterSpacing:1, color:eliminated?C.red:C.green, fontWeight:600 }}>{eliminated?"OUT":"IN ✓"}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-              <div style={{ display:"flex", gap:16, marginLeft:"auto" }}>
-                {[{l:"Entered",v:entrants.length,c:C.accent},{l:"Survived",v:survivors.length,c:C.green},{l:"Eliminated",v:entrants.filter(e=>e.eliminated).length,c:C.red}].map(s=>(
-                  <div key={s.l} style={{ textAlign:"center" }}>
-                    <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:s.c, lineHeight:1 }}>{s.v}</div>
-                    <div style={{ fontSize:8, color:C.muted, letterSpacing:1.2, textTransform:"uppercase" }}>{s.l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ overflowX:"auto" }}>
-              <table style={{ borderCollapse:"collapse", width:"100%", fontSize:11 }}>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign:"left", padding:"6px 10px", color:C.muted, fontSize:9, fontWeight:400, borderBottom:`1px solid ${C.border}`, position:"sticky", left:0, background:C.bg, minWidth:80, zIndex:2 }}>PLAYER</th>
-                    {rounds.map(r => (
-  <th key={r} style={{ padding:"6px 3px", color:C.muted, fontSize:9, fontWeight:400, borderBottom:`1px solid ${C.border}`, textAlign:"center", minWidth:44 }}>GW{r}</th>                  ))}
-                    <th style={{ padding:"6px 6px", color:C.muted, fontSize:9, fontWeight:400, borderBottom:`1px solid ${C.border}`, textAlign:"center" }}>STATUS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {entrants.map(({player,picks,eliminated}) => (
-                    <tr key={player}>
-                      <td style={{ padding:"5px 10px", borderBottom:"1px solid #0d1a2e", position:"sticky", left:0, background:C.surface, zIndex:1, fontWeight:500, color:eliminated?C.muted:C.text, whiteSpace:"nowrap", fontSize:11 }}>{player}</td>
-                      {rounds.map(r => {
-                        const pk = picks.find(p => p.r===r);
-                        return (
-                          <td key={r} style={{ padding:"3px 2px", borderBottom:"1px solid #0d1a2e", textAlign:"center" }}>
-                            {pk ? (pk.t==="NP" ?
-                              <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", padding:"2px 5px", borderRadius:4, fontSize:9, fontWeight:600, minWidth:34, background:"#2a1a00", color:C.amber, border:"1px solid #7f4f0090" }}>N/P</span>
-                              : <span style={pickCell(pk)}>{pk.t}</span>)
-                              : <span style={{ color:"#1e2d45" }}>—</span>}
-                          </td>
-                        );
-                      })}
-                      <td style={{ padding:"4px 6px", borderBottom:"1px solid #0d1a2e", textAlign:"center" }}>
-                        <span style={{ fontSize:8, letterSpacing:1, color:eliminated?C.red:C.green, fontWeight:600 }}>{eliminated?"OUT":"IN ✓"}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>}
-        </div>
+            )}
+          </div>
         )}
 
         {activeTab==="success" && (
           <div>
             <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:14 }}>PICK SUCCESS RATE — ALL SEASONS · ALL ROUNDS</div>
             <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-{[...overallSuccess].sort((a,b) => b.pct-a.pct||b.total-a.total).map((p,i) => {
-              const barColor = p.pct>=80?C.green:p.pct>=60?"#84cc16":p.pct>=40?C.amber:C.red;
+              {[...overallSuccess].sort((a,b) => b.pct-a.pct||b.total-a.total).map((p,i) => {
+                const barColor = p.pct>=80?C.green:p.pct>=60?"#84cc16":p.pct>=40?C.amber:C.red;
                 return (
                   <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
@@ -422,191 +421,191 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
         )}
 
         {activeTab==="history" && (
-  <div>
-    <div style={{ display:"flex", gap:0, marginBottom:14, borderBottom:`1px solid ${C.border}` }}>
-      {[["player","Player Picks"],["team","Team Picks"]].map(([v,l]) => (
-        <button key={v} onClick={()=>setHistoryMode(v)} style={{
-          flex:1, padding:"9px 0", cursor:"pointer", fontFamily:"inherit",
-          fontSize:9, letterSpacing:1.5, textTransform:"uppercase", border:"none",
-          background:historyMode===v?"#0f2050":"transparent",
-          color:historyMode===v?C.accent:C.muted,
-          borderBottom:`2px solid ${historyMode===v?C.accent:"transparent"}`,
-          transition:"all .2s",
-        }}>{l}</button>
-      ))}
-    </div>
-
-    {historyMode==="player" && (
-      <div>
-        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14, flexWrap:"wrap" }}>
-          <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5 }}>PLAYER</div>
-          <select value={historyPlayer} onChange={e=>setHistoryPlayer(e.target.value)}>
-            {PLAYERS.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
-          {playerHistory.length>0 && (
-            <div style={{ display:"flex", gap:12, marginLeft:"auto", fontSize:10 }}>
-              <span style={{ color:C.accent }}>{playerHistory.reduce((a,t)=>a+t.picked,0)} picks</span>
-              <span style={{ color:C.green }}>✓{playerHistory.reduce((a,t)=>a+t.wins,0)}</span>
-              <span style={{ color:C.red }}>✗{playerHistory.reduce((a,t)=>a+t.losses,0)}</span>
-              <span style={{ color:"#a78bfa" }}>{playerHistory.length} teams</span>
+          <div>
+            <div style={{ display:"flex", gap:0, marginBottom:14, borderBottom:`1px solid ${C.border}` }}>
+              {[["player","Player Picks"],["team","Team Picks"]].map(([v,l]) => (
+                <button key={v} onClick={()=>setHistoryMode(v)} style={{
+                  flex:1, padding:"9px 0", cursor:"pointer", fontFamily:"inherit",
+                  fontSize:9, letterSpacing:1.5, textTransform:"uppercase", border:"none",
+                  background:historyMode===v?"#0f2050":"transparent",
+                  color:historyMode===v?C.accent:C.muted,
+                  borderBottom:`2px solid ${historyMode===v?C.accent:"transparent"}`,
+                  transition:"all .2s",
+                }}>{l}</button>
+              ))}
             </div>
-          )}
-        </div>
-        {playerHistory.length===0 ? (
-          <div style={{ color:C.border, textAlign:"center", padding:"40px 0" }}>No picks found for {historyPlayer}</div>
-        ) : (
-          <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
-            <table style={{ borderCollapse:"collapse", width:"100%", fontSize:10 }}>
-              <thead>
-                <tr style={{ background:"#060a12" }}>
-                  {[["TEAM","left","10px"],["×","center","6px"],["W","center","6px"],["L","center","6px"],["RATE","left","8px"],["% ","right","8px"],["HISTORY","left","10px"]].map(([h,a,p]) => (
-                    <th key={h} style={{ padding:`7px ${p}`, textAlign:a, color:C.muted, fontSize:8, fontWeight:400, letterSpacing:1.2, borderBottom:`1px solid ${C.border}` }}>{h}</th>
+
+            {historyMode==="player" && (
+              <div>
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14, flexWrap:"wrap" }}>
+                  <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5 }}>PLAYER</div>
+                  <select value={historyPlayer} onChange={e=>setHistoryPlayer(e.target.value)}>
+                    {PLAYERS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  {playerHistory.length>0 && (
+                    <div style={{ display:"flex", gap:12, marginLeft:"auto", fontSize:10 }}>
+                      <span style={{ color:C.accent }}>{playerHistory.reduce((a,t)=>a+t.picked,0)} picks</span>
+                      <span style={{ color:C.green }}>✓{playerHistory.reduce((a,t)=>a+t.wins,0)}</span>
+                      <span style={{ color:C.red }}>✗{playerHistory.reduce((a,t)=>a+t.losses,0)}</span>
+                      <span style={{ color:"#a78bfa" }}>{playerHistory.length} teams</span>
+                    </div>
+                  )}
+                </div>
+                {playerHistory.length===0 ? (
+                  <div style={{ color:C.border, textAlign:"center", padding:"40px 0" }}>No picks found for {historyPlayer}</div>
+                ) : (
+                  <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
+                    <table style={{ borderCollapse:"collapse", width:"100%", fontSize:10 }}>
+                      <thead>
+                        <tr style={{ background:"#060a12" }}>
+                          {[["TEAM","left","10px"],["x","center","6px"],["W","center","6px"],["L","center","6px"],["RATE","left","8px"],["% ","right","8px"],["HISTORY","left","10px"]].map(([h,a,p]) => (
+                            <th key={h} style={{ padding:`7px ${p}`, textAlign:a, color:C.muted, fontSize:8, fontWeight:400, letterSpacing:1.2, borderBottom:`1px solid ${C.border}` }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {playerHistory.map(({team,picked,wins,losses,usages}) => {
+                          const pct = picked>0?Math.round(wins/picked*100):0;
+                          const barColor = pct===100?C.green:pct>50?"#84cc16":C.amber;
+                          const dots = [...Array(wins).fill(true),...Array(losses).fill(false)];
+                          return (
+                            <tr key={team} style={{ borderBottom:"1px solid #0d1a2e" }}>
+                              <td style={{ padding:"6px 10px", whiteSpace:"nowrap" }}><span style={tbadge(team)}>{team}</span></td>
+                              <td style={{ padding:"6px 6px", textAlign:"center", color:C.muted }}>{picked}</td>
+                              <td style={{ padding:"6px 6px", textAlign:"center", color:C.green, fontWeight:600 }}>{wins}</td>
+                              <td style={{ padding:"6px 6px", textAlign:"center", color:C.red, fontWeight:600 }}>{losses}</td>
+                              <td style={{ padding:"6px 8px", minWidth:80 }}>
+                                <div style={{ height:4, background:"#111d30", borderRadius:2, overflow:"hidden" }}>
+                                  <div style={{ height:"100%", width:`${pct}%`, background:barColor, borderRadius:2 }}/>
+                                </div>
+                              </td>
+                              <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:barColor, whiteSpace:"nowrap" }}>{pct}%</td>
+                              <td style={{ padding:"6px 10px" }}>
+                                <div style={{ display:"flex", gap:3, flexWrap:"wrap" }}>
+                                  {dots.map((w,j) => (
+                                    <span key={j} title={usages[j]?`${usages[j].season} ${usages[j].game.replace("Game","Round")} GW${usages[j].round}`:""} style={{ width:7, height:7, borderRadius:"50%", background:w?C.green:C.red, display:"inline-block", flexShrink:0, opacity:0.9 }}/>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {historyMode==="team" && (
+              <div>
+                <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden", marginBottom:14 }}>
+                  <table style={{ borderCollapse:"collapse", width:"100%", fontSize:10 }}>
+                    <thead>
+                      <tr style={{ background:"#060a12" }}>
+                        {[["TEAM","left","10px"],["PICKED","center","6px"],["W","center","6px"],["L","center","6px"],["RATE","left","8px"],["% ","right","8px"]].map(([h,a,p]) => (
+                          <th key={h} style={{ padding:`7px ${p}`, textAlign:a, color:C.muted, fontSize:8, fontWeight:400, letterSpacing:1.2, borderBottom:`1px solid ${C.border}` }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(teamStats)
+                        .map(([team, td]) => ({ team, ...td, pct: td.total > 0 ? Math.round(td.wins / td.total * 100) : 0 }))
+                        .sort((a, b) => b.pct - a.pct || b.total - a.total)
+                        .map(({ team, total, wins, losses, pct }) => {
+                          const barColor = pct>=80?C.green:pct>=60?"#84cc16":pct>=40?C.amber:C.red;
+                          return (
+                            <tr key={team} style={{ borderBottom:"1px solid #0d1a2e", cursor:"pointer" }} onClick={()=>setTeamView(team)}>
+                              <td style={{ padding:"6px 10px", whiteSpace:"nowrap" }}><span style={tbadge(team)}>{team}</span></td>
+                              <td style={{ padding:"6px 6px", textAlign:"center", color:C.muted }}>{total}</td>
+                              <td style={{ padding:"6px 6px", textAlign:"center", color:C.green, fontWeight:600 }}>{wins}</td>
+                              <td style={{ padding:"6px 6px", textAlign:"center", color:C.red, fontWeight:600 }}>{losses}</td>
+                              <td style={{ padding:"6px 8px", minWidth:80 }}>
+                                <div style={{ height:4, background:"#111d30", borderRadius:2, overflow:"hidden" }}>
+                                  <div style={{ height:"100%", width:`${pct}%`, background:barColor, borderRadius:2 }}/>
+                                </div>
+                              </td>
+                              <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:barColor, whiteSpace:"nowrap" }}>{pct}%</td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:14 }}>
+                  {Object.keys(teamStats).sort().map(t => (
+                    <button key={t} style={pill(teamView===t)} onClick={()=>setTeamView(t)}>{t}</button>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {playerHistory.map(({team,picked,wins,losses,usages}) => {
-                  const pct = picked>0?Math.round(wins/picked*100):0;
-                  const barColor = pct===100?C.green:pct>50?"#84cc16":C.amber;
-                  const dots = [...Array(wins).fill(true),...Array(losses).fill(false)];
+                </div>
+                {teamStats[teamView] && (() => {
+                  const td = teamStats[teamView];
+                  const pct = td.total > 0 ? Math.round(td.wins / td.total * 100) : 0;
+                  const barColor = pct>=80?C.green:pct>=60?"#84cc16":pct>=40?C.amber:C.red;
+                  const players = Object.entries(td.players)
+                    .map(([player, v]) => ({ player, ...v, pct: v.picked > 0 ? Math.round(v.wins / v.picked * 100) : 0 }))
+                    .sort((a, b) => b.pct - a.pct || b.picked - a.picked);
                   return (
-                    <tr key={team} style={{ borderBottom:"1px solid #0d1a2e" }}>
-                      <td style={{ padding:"6px 10px", whiteSpace:"nowrap" }}><span style={tbadge(team)}>{team}</span></td>
-                      <td style={{ padding:"6px 6px", textAlign:"center", color:C.muted }}>{picked}</td>
-                      <td style={{ padding:"6px 6px", textAlign:"center", color:C.green, fontWeight:600 }}>{wins}</td>
-                      <td style={{ padding:"6px 6px", textAlign:"center", color:C.red, fontWeight:600 }}>{losses}</td>
-                      <td style={{ padding:"6px 8px", minWidth:80 }}>
-                        <div style={{ height:4, background:"#111d30", borderRadius:2, overflow:"hidden" }}>
-                          <div style={{ height:"100%", width:`${pct}%`, background:barColor, borderRadius:2 }}/>
+                    <div>
+                      <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>{ABBR_FULL[teamView]||teamView} — all players</div>
+                          <div style={{ height:5, background:"#111d30", borderRadius:3, overflow:"hidden", marginTop:8 }}>
+                            <div style={{ height:"100%", width:`${pct}%`, background:barColor, borderRadius:3 }}/>
+                          </div>
                         </div>
-                      </td>
-                      <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:barColor, whiteSpace:"nowrap" }}>{pct}%</td>
-                      <td style={{ padding:"6px 10px" }}>
-                        <div style={{ display:"flex", gap:3, flexWrap:"wrap" }}>
-                          {dots.map((w,j) => (
-                            <span key={j} title={usages[j]?`${usages[j].season} ${usages[j].game.replace("Game","Round")} GW${usages[j].round}`:""} style={{ width:7, height:7, borderRadius:"50%", background:w?C.green:C.red, display:"inline-block", flexShrink:0, opacity:0.9 }}/>
+                        <div style={{ display:"flex", gap:16 }}>
+                          {[{l:"Picked",v:td.total,c:C.accent},{l:"Wins",v:td.wins,c:C.green},{l:"Losses",v:td.losses,c:C.red},{l:"Win %",v:pct+"%",c:barColor}].map(s=>(
+                            <div key={s.l} style={{ textAlign:"center" }}>
+                              <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, color:s.c, lineHeight:1 }}>{s.v}</div>
+                              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.2, textTransform:"uppercase" }}>{s.l}</div>
+                            </div>
                           ))}
                         </div>
-                      </td>
-                    </tr>
+                      </div>
+                      <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
+                        <table style={{ borderCollapse:"collapse", width:"100%", fontSize:10 }}>
+                          <thead>
+                            <tr style={{ background:"#060a12" }}>
+                              {[["PLAYER","left","10px"],["x","center","6px"],["W","center","6px"],["L","center","6px"],["RATE","left","8px"],["% ","right","8px"],["HISTORY","left","10px"]].map(([h,a,p]) => (
+                                <th key={h} style={{ padding:`7px ${p}`, textAlign:a, color:C.muted, fontSize:8, fontWeight:400, letterSpacing:1.2, borderBottom:`1px solid ${C.border}` }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {players.map(({player, picked, wins, losses, dots, pct}) => {
+                              const barColor = pct===100?C.green:pct>50?"#84cc16":C.amber;
+                              return (
+                                <tr key={player} style={{ borderBottom:"1px solid #0d1a2e" }}>
+                                  <td style={{ padding:"6px 10px", fontWeight:500, color:C.text, fontSize:11 }}>{player}</td>
+                                  <td style={{ padding:"6px 6px", textAlign:"center", color:C.muted }}>{picked}</td>
+                                  <td style={{ padding:"6px 6px", textAlign:"center", color:C.green, fontWeight:600 }}>{wins}</td>
+                                  <td style={{ padding:"6px 6px", textAlign:"center", color:C.red, fontWeight:600 }}>{losses}</td>
+                                  <td style={{ padding:"6px 8px", minWidth:80 }}>
+                                    <div style={{ height:4, background:"#111d30", borderRadius:2, overflow:"hidden" }}>
+                                      <div style={{ height:"100%", width:`${pct}%`, background:barColor, borderRadius:2 }}/>
+                                    </div>
+                                  </td>
+                                  <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:barColor, whiteSpace:"nowrap" }}>{pct}%</td>
+                                  <td style={{ padding:"6px 10px" }}>
+                                    <div style={{ display:"flex", gap:3, flexWrap:"wrap" }}>
+                                      {dots.map((w,j) => (
+                                        <span key={j} style={{ width:7, height:7, borderRadius:"50%", background:w===true?C.green:w===false?C.red:C.amber, display:"inline-block", flexShrink:0, opacity:0.9 }}/>
+                                      ))}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   );
-                })}
-              </tbody>
-            </table>
+                })()}
+              </div>
+            )}
           </div>
         )}
-      </div>
-    )}
-
-    {historyMode==="team" && (
-      <div>
-<div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden", marginBottom:14 }}>
-  <table style={{ borderCollapse:"collapse", width:"100%", fontSize:10 }}>
-    <thead>
-      <tr style={{ background:"#060a12" }}>
-        {[["TEAM","left","10px"],["PICKED","center","6px"],["W","center","6px"],["L","center","6px"],["RATE","left","8px"],["% ","right","8px"]].map(([h,a,p]) => (
-          <th key={h} style={{ padding:`7px ${p}`, textAlign:a, color:C.muted, fontSize:8, fontWeight:400, letterSpacing:1.2, borderBottom:`1px solid ${C.border}` }}>{h}</th>
-        ))}
-      </tr>
-    </thead>
-    <tbody>
-      {Object.entries(teamStats)
-        .map(([team, td]) => ({ team, ...td, pct: td.total > 0 ? Math.round(td.wins / td.total * 100) : 0 }))
-        .sort((a, b) => b.pct - a.pct || b.total - a.total)
-        .map(({ team, total, wins, losses, pct }) => {
-          const barColor = pct>=80?C.green:pct>=60?"#84cc16":pct>=40?C.amber:C.red;
-          return (
-            <tr key={team} style={{ borderBottom:"1px solid #0d1a2e", cursor:"pointer" }} onClick={()=>setTeamView(team)}>
-              <td style={{ padding:"6px 10px", whiteSpace:"nowrap" }}><span style={tbadge(team)}>{team}</span></td>
-              <td style={{ padding:"6px 6px", textAlign:"center", color:C.muted }}>{total}</td>
-              <td style={{ padding:"6px 6px", textAlign:"center", color:C.green, fontWeight:600 }}>{wins}</td>
-              <td style={{ padding:"6px 6px", textAlign:"center", color:C.red, fontWeight:600 }}>{losses}</td>
-              <td style={{ padding:"6px 8px", minWidth:80 }}>
-                <div style={{ height:4, background:"#111d30", borderRadius:2, overflow:"hidden" }}>
-                  <div style={{ height:"100%", width:`${pct}%`, background:barColor, borderRadius:2 }}/>
-                </div>
-              </td>
-              <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:barColor, whiteSpace:"nowrap" }}>{pct}%</td>
-            </tr>
-          );
-        })}
-    </tbody>
-  </table>
-</div>
-        <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:14 }}>
-          {Object.keys(teamStats).sort().map(t => (
-            <button key={t} style={pill(teamView===t)} onClick={()=>setTeamView(t)}>{t}</button>
-          ))}
-        </div>
-        {teamStats[teamView] && (() => {
-          const td = teamStats[teamView];
-          const pct = td.total > 0 ? Math.round(td.wins / td.total * 100) : 0;
-          const barColor = pct>=80?C.green:pct>=60?"#84cc16":pct>=40?C.amber:C.red;
-          const players = Object.entries(td.players)
-            .map(([player, v]) => ({ player, ...v, pct: v.picked > 0 ? Math.round(v.wins / v.picked * 100) : 0 }))
-            .sort((a, b) => b.pct - a.pct || b.picked - a.picked);
-          return (
-            <div>
-              <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>{ABBR_FULL[teamView]||teamView} — all players</div>
-                  <div style={{ height:5, background:"#111d30", borderRadius:3, overflow:"hidden", marginTop:8 }}>
-                    <div style={{ height:"100%", width:`${pct}%`, background:barColor, borderRadius:3 }}/>
-                  </div>
-                </div>
-                <div style={{ display:"flex", gap:16 }}>
-                  {[{l:"Picked",v:td.total,c:C.accent},{l:"Wins",v:td.wins,c:C.green},{l:"Losses",v:td.losses,c:C.red},{l:"Win %",v:pct+"%",c:barColor}].map(s=>(
-                    <div key={s.l} style={{ textAlign:"center" }}>
-                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, color:s.c, lineHeight:1 }}>{s.v}</div>
-                      <div style={{ fontSize:8, color:C.muted, letterSpacing:1.2, textTransform:"uppercase" }}>{s.l}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
-                <table style={{ borderCollapse:"collapse", width:"100%", fontSize:10 }}>
-                  <thead>
-                    <tr style={{ background:"#060a12" }}>
-                      {[["PLAYER","left","10px"],["×","center","6px"],["W","center","6px"],["L","center","6px"],["RATE","left","8px"],["% ","right","8px"],["HISTORY","left","10px"]].map(([h,a,p]) => (
-                        <th key={h} style={{ padding:`7px ${p}`, textAlign:a, color:C.muted, fontSize:8, fontWeight:400, letterSpacing:1.2, borderBottom:`1px solid ${C.border}` }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {players.map(({player, picked, wins, losses, dots, pct}) => {
-                      const barColor = pct===100?C.green:pct>50?"#84cc16":C.amber;
-                      return (
-                        <tr key={player} style={{ borderBottom:"1px solid #0d1a2e" }}>
-                          <td style={{ padding:"6px 10px", fontWeight:500, color:C.text, fontSize:11 }}>{player}</td>
-                          <td style={{ padding:"6px 6px", textAlign:"center", color:C.muted }}>{picked}</td>
-                          <td style={{ padding:"6px 6px", textAlign:"center", color:C.green, fontWeight:600 }}>{wins}</td>
-                          <td style={{ padding:"6px 6px", textAlign:"center", color:C.red, fontWeight:600 }}>{losses}</td>
-                          <td style={{ padding:"6px 8px", minWidth:80 }}>
-                            <div style={{ height:4, background:"#111d30", borderRadius:2, overflow:"hidden" }}>
-                              <div style={{ height:"100%", width:`${pct}%`, background:barColor, borderRadius:2 }}/>
-                            </div>
-                          </td>
-                          <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:barColor, whiteSpace:"nowrap" }}>{pct}%</td>
-                          <td style={{ padding:"6px 10px" }}>
-                            <div style={{ display:"flex", gap:3, flexWrap:"wrap" }}>
-                              {dots.map((w,j) => (
-                                <span key={j} style={{ width:7, height:7, borderRadius:"50%", background:w===true?C.green:w===false?C.red:C.amber, display:"inline-block", flexShrink:0, opacity:0.9 }}/>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          );
-        })()}
-      </div>
-    )}
-  </div>
-)}
 
         {activeTab==="records" && (
           <div>
@@ -660,154 +659,161 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
           </div>
         )}
 
-        
         {activeTab==="prize" && (
-  <div>
-    <div style={{ display:"flex", gap:0, marginBottom:16, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
-      {[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","WTA 24/25-25/26"],["gg","Goal Guess"],["ss","Sweepstake"]].map(([v,l]) => (
-        <button key={v} onClick={()=>setPrizeTab(v)} style={{
-          padding:"9px 12px", cursor:"pointer", fontFamily:"inherit",
-          fontSize:9, letterSpacing:1.2, textTransform:"uppercase", border:"none",
-          background:prizeTab===v?"#0f2050":"transparent",
-          color:prizeTab===v?C.accent:C.muted,
-          borderBottom:`2px solid ${prizeTab===v?C.accent:"transparent"}`,
-          transition:"all .2s", whiteSpace:"nowrap",
-        }}>{l}</button>
-      ))}
-    </div>
-
-    {prizeTab==="total" && (
-      <div>
-        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ALL TIME TOTAL PRIZE MONEY</div>
-        <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-          {[...overallStats].filter(p => p.total > 0).sort((a,b) => b.total - a.total).map((p,i) => (
-            <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
-                <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
-                <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
-                  {p.gg>0 && <span style={{ color:C.muted }}>GG £{p.gg.toFixed(2)}</span>}
-                  {p.ss>0 && <span style={{ color:C.muted }}>SS £{p.ss.toFixed(2)}</span>}
-                  {p.wta>0 && <span style={{ color:C.muted }}>WTA £{p.wta.toFixed(2)}</span>}
-                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.total.toFixed(2)}</span>
-                </div>
-              </div>
+          <div>
+            <div style={{ display:"flex", gap:0, marginBottom:16, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
+              {[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","WTA 24/25-25/26"],["gg","Goal Guess"],["ss","Sweepstake"]].map(([v,l]) => (
+                <button key={v} onClick={()=>setPrizeTab(v)} style={{
+                  padding:"9px 12px", cursor:"pointer", fontFamily:"inherit",
+                  fontSize:9, letterSpacing:1.2, textTransform:"uppercase", border:"none",
+                  background:prizeTab===v?"#0f2050":"transparent",
+                  color:prizeTab===v?C.accent:C.muted,
+                  borderBottom:`2px solid ${prizeTab===v?C.accent:"transparent"}`,
+                  transition:"all .2s", whiteSpace:"nowrap",
+                }}>{l}</button>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
-    )}
 
-    {prizeTab==="wta" && (
-      <div>
-        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ALL TIME WINNER TAKES ALL</div>
-        <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-          {[...overallStats].filter(p => p.wta > 0).sort((a,b) => b.wta - a.wta).map((p,i) => (
-            <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
-                <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
-                <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
-                  {p.wtaWins>0 && <span style={{ color:C.green }}>🏆 {p.wtaWins}</span>}
-                  {p.wtaSplits>0 && <span style={{ color:C.accent }}>🤝 {p.wtaSplits}</span>}
-                  {p.wtaRollovers>0 && <span style={{ color:C.amber }}>🔄 {p.wtaRollovers}</span>}
-                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.wta.toFixed(2)}</span>
+            {prizeTab==="total" && (
+              <div>
+                <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ALL TIME TOTAL PRIZE MONEY</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                  {[...overallStats].filter(p => p.total > 0).sort((a,b) => b.total - a.total).map((p,i) => (
+                    <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
+                        <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                        <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
+                          {p.gg>0 && <span style={{ color:C.muted }}>GG £{p.gg.toFixed(2)}</span>}
+                          {p.ss>0 && <span style={{ color:C.muted }}>SS £{p.ss.toFixed(2)}</span>}
+                          {p.wta>0 && <span style={{ color:C.muted }}>WTA £{p.wta.toFixed(2)}</span>}
+                          <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.total.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
+            )}
 
-    {prizeTab==="wtacalc" && (
-      <div>
-        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>NET WINNINGS — 24/25 & 25/26 SEASONS</div>
-        <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:22 }}>
-          {prizeData.leaderboard.map((p,i) => (
-            <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
-                <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
-                <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
-                  <span style={{ color:C.green }}>Won £{p.won%1===0?p.won:p.won.toFixed(2)}</span>
-                  <span style={{ color:C.muted }}>Spent £{p.spent}</span>
-                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, minWidth:60, textAlign:"right", color:p.net>0?C.green:p.net<0?C.red:C.muted }}>
-                    {p.net>0?"+":""}£{p.net%1===0?p.net:p.net.toFixed(2)}
-                  </span>
+            {prizeTab==="wta" && (
+              <div>
+                <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ALL TIME WINNER TAKES ALL</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                  {[...overallStats].filter(p => p.wta > 0).sort((a,b) => b.wta - a.wta).map((p,i) => (
+                    <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
+                        <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                        <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
+                          {p.wtaWins>0 && <span style={{ color:C.green }}>🏆 {p.wtaWins}</span>}
+                          {p.wtaSplits>0 && <span style={{ color:C.accent }}>🤝 {p.wtaSplits}</span>}
+                          {p.wtaRollovers>0 && <span style={{ color:C.amber }}>🔄 {p.wtaRollovers}</span>}
+                          <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.wta.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ROUND BY ROUND</div>
-        <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-          {prizeData.games.map(g => {
-            const isInProgress = g.outcome==="inprogress";
-            const isRollover = g.outcome==="rollover";
-            const outcomeColor = isInProgress?C.amber:isRollover?C.accent:C.green;
-            const outcomeLabel = isInProgress?"🟡 In Progress":isRollover?"🔄 Rollover":g.winners.length===1?`🏆 ${g.winners[0]}`:`🤝 ${g.winners.join(" & ")}`;
-            return (
-              <div key={g.season+g.game} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"10px 12px" }}>
-                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:11, fontWeight:600, color:C.text }}>{g.season==="2024"?"24/25":"25/26"} {g.game.replace("Game","Round")}</div>
-                    <div style={{ fontSize:10, color:outcomeColor, marginTop:2 }}>{outcomeLabel}</div>
-                  </div>
-                  <div style={{ textAlign:"right" }}>
-                    <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:isInProgress?C.amber:C.green, lineHeight:1 }}>£{g.totalPot}</div>
-                    <div style={{ fontSize:8, color:C.muted, letterSpacing:1, textTransform:"uppercase" }}>{isInProgress?"current pot":isRollover?"rolled over":"prize pot"}</div>
-                  </div>
+            )}
+
+            {prizeTab==="wtacalc" && (
+              <div>
+                <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>NET WINNINGS — 24/25 & 25/26 SEASONS</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:22 }}>
+                  {prizeData.leaderboard.map((p,i) => (
+                    <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
+                        <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                        <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
+                          <span style={{ color:C.green }}>Won £{p.won%1===0?p.won:p.won.toFixed(2)}</span>
+                          <span style={{ color:C.muted }}>Spent £{p.spent}</span>
+                          <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, minWidth:60, textAlign:"right", color:p.net>0?C.green:p.net<0?C.red:C.muted }}>
+                            {p.net>0?"+":""}£{p.net%1===0?p.net:p.net.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div style={{ display:"flex", gap:12, fontSize:10, color:C.muted, flexWrap:"wrap" }}>
-                  <span>{g.entrants} x £10 = <strong style={{ color:C.text }}>£{g.gamePot}</strong></span>
-                  {g.rolledOver===0&&!isInProgress&&!isRollover&&g.totalPot>g.gamePot&&<span>+ rollover <strong style={{ color:C.text }}>£{g.totalPot-g.gamePot}</strong></span>}
-                  {isRollover&&<span style={{ color:C.accent }}>Carries to next round</span>}
-                  {!isInProgress&&!isRollover&&g.winners.length>1&&(
-                    <span>Each: <strong style={{ color:C.green }}>£{(g.totalPot/g.winners.length)%1===0?g.totalPot/g.winners.length:(g.totalPot/g.winners.length).toFixed(2)}</strong></span>
-                  )}
+                <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ROUND BY ROUND</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                  {prizeData.games.map(g => {
+                    const isInProgress = g.outcome==="inprogress";
+                    const isRollover = g.outcome==="rollover";
+                    const outcomeColor = isInProgress?C.amber:isRollover?C.accent:C.green;
+                    const outcomeLabel = isInProgress?"🟡 In Progress":isRollover?"🔄 Rollover":g.winners.length===1?`🏆 ${g.winners[0]}`:`🤝 ${g.winners.join(" & ")}`;
+                    return (
+                      <div key={g.season+g.game} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"10px 12px" }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:11, fontWeight:600, color:C.text }}>{g.season==="2024"?"24/25":"25/26"} {g.game.replace("Game","Round")}</div>
+                            <div style={{ fontSize:10, color:outcomeColor, marginTop:2 }}>{outcomeLabel}</div>
+                          </div>
+                          <div style={{ textAlign:"right" }}>
+                            <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:isInProgress?C.amber:C.green, lineHeight:1 }}>£{g.totalPot}</div>
+                            <div style={{ fontSize:8, color:C.muted, letterSpacing:1, textTransform:"uppercase" }}>{isInProgress?"current pot":isRollover?"rolled over":"prize pot"}</div>
+                          </div>
+                        </div>
+                        <div style={{ display:"flex", gap:12, fontSize:10, color:C.muted, flexWrap:"wrap" }}>
+                          <span>{g.entrants} x £10 = <strong style={{ color:C.text }}>£{g.gamePot}</strong></span>
+                          {g.rolledOver===0&&!isInProgress&&!isRollover&&g.totalPot>g.gamePot&&<span>+ rollover <strong style={{ color:C.text }}>£{g.totalPot-g.gamePot}</strong></span>}
+                          {isRollover&&<span style={{ color:C.accent }}>Carries to next round</span>}
+                          {!isInProgress&&!isRollover&&g.winners.length>1&&(
+                            <span>Each: <strong style={{ color:C.green }}>£{(g.totalPot/g.winners.length)%1===0?g.totalPot/g.winners.length:(g.totalPot/g.winners.length).toFixed(2)}</strong></span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-    )}
+            )}
 
-    {prizeTab==="gg" && (
-      <div>
-        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>GOAL GUESS — ALL TIME</div>
-        <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-          {[...overallStats].filter(p => p.gg > 0).sort((a,b) => b.gg - a.gg).map((p,i) => (
-            <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
-                <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
-                <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
-                  <span style={{ color:C.muted }}>🎯 {p.ggWins} {p.ggWins===1?"win":"wins"}</span>
-                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.gg.toFixed(2)}</span>
+            {prizeTab==="gg" && (
+              <div>
+                <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>GOAL GUESS — ALL TIME</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                  {[...overallStats].filter(p => p.gg > 0).sort((a,b) => b.gg - a.gg).map((p,i) => (
+                    <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
+                        <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                        <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
+                          <span style={{ color:C.muted }}>🎯 {p.ggWins} {p.ggWins===1?"win":"wins"}</span>
+                          <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.gg.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
+            )}
 
-    {prizeTab==="ss" && (
-      <div>
-        <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>SWEEPSTAKE — ALL TIME</div>
-        <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-          {[...overallStats].filter(p => p.ss > 0).sort((a,b) => b.ss - a.ss).map((p,i) => (
-            <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
-                <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
-                <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
-                  <span style={{ color:C.muted }}>🎟 {p.ssWins} {p.ssWins===1?"win":"wins"}</span>
-                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.ss.toFixed(2)}</span>
-                  </div>
-)}
+            {prizeTab==="ss" && (
+              <div>
+                <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>SWEEPSTAKE — ALL TIME</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+                  {[...overallStats].filter(p => p.ss > 0).sort((a,b) => b.ss - a.ss).map((p,i) => (
+                    <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
+                        <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                        <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
+                          <span style={{ color:C.muted }}>🎟 {p.ssWins} {p.ssWins===1?"win":"wins"}</span>
+                          <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:C.green, minWidth:70, textAlign:"right" }}>£{p.ss.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
