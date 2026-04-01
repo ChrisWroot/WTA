@@ -8,3 +8,24 @@ export async function fetchSheetData() {
   const json = await res.json();
   return json.sheets[0].data[0].rowData.map(row => row.values || []);
 }
+
+export async function fetchOverallStats() {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Overall%20Stats!A1:K24?key=${API_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch stats");
+  const json = await res.json();
+  const rows = json.values || [];
+  return rows.slice(1).map(r => ({
+    player:       r[0]  || "",
+    ggWins:       parseFloat(r[1])  || 0,
+    gg:           parseFloat(r[2])  || 0,
+    ssWins:       parseFloat(r[3])  || 0,
+    ss:           parseFloat(r[4])  || 0,
+    wtaSplits:    parseFloat(r[5])  || 0,
+    wtaWins:      parseFloat(r[6])  || 0,
+    wtaRollovers: parseFloat(r[7])  || 0,
+    wta:          parseFloat(r[8])  || 0,
+    totalWins:    parseFloat(r[9])  || 0,
+    total:        parseFloat(r[10]) || 0,
+  })).filter(p => p.player && p.player !== "Total");
+}
