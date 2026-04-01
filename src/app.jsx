@@ -312,11 +312,10 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
     <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
       {games.map(g => <button key={g} style={pill(selectedGame===g)} onClick={()=>setSelectedGame(g)}>{g.replace("Game","Round")}</button>)}
     </div>
-    ...
     {gameData && <div>
             <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
               <div>
-                <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>Game Outcome</div>
+<div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>Round Outcome</div>
                 <div style={{ fontSize:11, color:season==="2025"&&selectedGame==="Game 10"?C.amber:survivors.length===0?C.red:C.green, fontWeight:500 }}>
                   {season==="2025"&&selectedGame==="Game 10"?"🟡 In progress":survivors.length===0?"🔴 Rollover — no survivors":survivors.length===1?"🏆 Winner: "+survivors[0]:"🤝 Split: "+survivors.join(" & ")}
                 </div>
@@ -549,7 +548,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
                   <div key={g.season+g.game} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"10px 12px" }}>
                     <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
                       <div style={{ flex:1 }}>
-                        <div style={{ fontSize:11, fontWeight:600, color:C.text }}>{g.season} {g.game}</div>
+<div style={{ fontSize:11, fontWeight:600, color:C.text }}>{g.season === "2024" ? "24/25" : "25/26"} {g.game.replace("Game","Round")}</div>
                         <div style={{ fontSize:10, color:outcomeColor, marginTop:2 }}>{outcomeLabel}</div>
                       </div>
                       <div style={{ textAlign:"right" }}>
