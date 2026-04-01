@@ -76,7 +76,6 @@ const [season, setSeason] = useState(lastSeason);
 const [selectedGame, setSelectedGame] = useState(lastGame);
   const [activeTab, setActiveTab] = useState("grid");
   const [historyPlayer, setHistoryPlayer] = useState("Ed");
-  const [successSort, setSuccessSort] = useState("pct");
   const [recordsTab, setRecordsTab] = useState("best");
 
   useEffect(() => {
@@ -368,17 +367,10 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
 
         {activeTab==="success" && (
           <div>
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, flexWrap:"wrap", gap:10 }}>
-              <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5 }}>PICK SUCCESS RATE — ALL SEASONS · ALL GAMES</div>
-              <div style={{ display:"flex", gap:6 }}>
-                {[["pct","By %"],["picks","By Picks"]].map(([v,l]) => (
-                  <button key={v} style={pill(successSort===v)} onClick={()=>setSuccessSort(v)}>{l}</button>
-                ))}
-              </div>
-            </div>
+            <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:14 }}>PICK SUCCESS RATE — ALL SEASONS · ALL ROUNDS</div>
             <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
-              {[...overallSuccess].sort((a,b) => successSort==="pct" ? b.pct-a.pct||b.total-a.total : b.total-a.total).map((p,i) => {
-                const barColor = p.pct>=80?C.green:p.pct>=60?"#84cc16":p.pct>=40?C.amber:C.red;
+{[...overallSuccess].sort((a,b) => b.pct-a.pct||b.total-a.total).map((p,i) => {
+              const barColor = p.pct>=80?C.green:p.pct>=60?"#84cc16":p.pct>=40?C.amber:C.red;
                 return (
                   <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
