@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { fetchSheetData, fetchOverallStats } from "./data.js";
+import { fetchSheetData, fetchOverallStats, fetchFixtures } from "./data.js";
 import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS, GAME_COLS } from "./constants.js";
 const ABBR_FULL = {
   ARS:"Arsenal",MCI:"Man City",LIV:"Liverpool",TOT:"Spurs",CHE:"Chelsea",
@@ -81,21 +81,23 @@ export default function App() {
   const [historyMode, setHistoryMode] = useState("player");
   const [overallStats, setOverallStats] = useState([]);
   const [prizeTab, setPrizeTab] = useState("total");
+  const [fixtures, setFixtures] = useState([]);
 
   useEffect(() => {
-    Promise.all([fetchSheetData(), fetchOverallStats()])
-      .then(([sheetData, stats]) => {
-        const parsed = parseSheetData(sheetData);
-        const hasData = Object.values(parsed).some(s =>
-          Object.values(s).some(game => Object.keys(game.picks).length > 0)
-        );
-        if (hasData) setAllData(parsed);
-        if (stats.length > 0) setOverallStats(stats);
-        setLoading(false);
-      })
-      .catch(() => { setLiveError(true); setLoading(false); });
-  }, []);
-
+  Promise.all([fetchSheetData(), fetchOverallStats(), fetchFixtures()])
+    .then(([sheetData, stats, fixtureData]) => {
+      const parsed = parseSheetData(sheetData);
+      const hasData = Object.values(parsed).some(s =>
+        Object.values(s).some(game => Object.keys(game.picks).length > 0)
+      );
+      if (hasData) setAllData(parsed);
+      if (stats.length > 0) setOverallStats(stats);
+      if (fixtureData.length > 0) setFixtures(fixtureData);
+      setLoading(false);
+    })
+    .catch(() => { setLiveError(true); setLoading(false); });
+}, []);
+  
   const games = Object.keys(allData[season]);
   const gameData = allData[season][selectedGame];
   const rounds = gameData ? gameData.rounds : [];
@@ -462,6 +464,35 @@ export default function App() {
             <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
               {games.map(g => <button key={g} style={pill(selectedGame===g)} onClick={()=>setSelectedGame(g)}>{g.replace("Game","Round")}</button>)}
             </div>
+{fixtures.length > 0 && (
+  <div style={{ overflow:"hidden", marginBottom:14, position:"relative" }}>
+    <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, marginBottom:8 }}>UPCOMING FIXTURES</div>
+    <div style={{
+      display:"flex", gap:8, overflowX:"auto", paddingBottom:4,
+      scrollbarWidth:"none", msOverflowStyle:"none",
+    }}>
+      {fixtures.map((f, i) => {
+        const d = new Date(f.date);
+        const day = d.toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" });
+        const time = d.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit" });
+        const hasScore = f.homeScore !== null && f.homeScore !== undefined;
+        return (
+          <div key={i} style={{
+            background:C.surface, border:`1px solid ${C.border}`, borderRadius:8,
+            padding:"8px 10px", flexShrink:0, minWidth:140, textAlign:"center",
+          }}>
+            <div style={{ fontSize:8, color:C.muted, marginBottom:6 }}>{day}</div>
+            <div style={{ fontSize:10, fontWeight:600, color:C.text, marginBottom:2 }}>{f.home}</div>
+            <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:hasScore?C.accent:C.muted, margin:"4px 0" }}>
+              {hasScore ? `${f.homeScore} - ${f.awayScore}` : time}
+            </div>
+            <div style={{ fontSize:10, fontWeight:600, color:C.text, marginTop:2 }}>{f.away}</div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)}
             {gameData && (
               <div>
                 <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
