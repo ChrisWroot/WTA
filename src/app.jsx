@@ -465,31 +465,45 @@ export default function App() {
               {games.map(g => <button key={g} style={pill(selectedGame===g)} onClick={()=>setSelectedGame(g)}>{g.replace("Game","Round")}</button>)}
             </div>
 {fixtures.length > 0 && (
-  <div style={{ overflow:"hidden", marginBottom:14, position:"relative" }}>
+  <div style={{ overflow:"hidden", marginBottom:14 }}>
     <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, marginBottom:8 }}>UPCOMING FIXTURES</div>
-    <div style={{
-      display:"flex", gap:8, overflowX:"auto", paddingBottom:4,
-      scrollbarWidth:"none", msOverflowStyle:"none",
-    }}>
-      {fixtures.map((f, i) => {
-        const d = new Date(f.date);
-        const day = d.toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" });
-        const time = d.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit" });
-        const hasScore = f.homeScore !== null && f.homeScore !== undefined;
-        return (
-          <div key={i} style={{
-            background:C.surface, border:`1px solid ${C.border}`, borderRadius:8,
-            padding:"8px 10px", flexShrink:0, minWidth:140, textAlign:"center",
-          }}>
-            <div style={{ fontSize:8, color:C.muted, marginBottom:6 }}>{day}</div>
-            <div style={{ fontSize:10, fontWeight:600, color:C.text, marginBottom:2 }}>{f.home}</div>
-            <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:hasScore?C.accent:C.muted, margin:"4px 0" }}>
-              {hasScore ? `${f.homeScore} - ${f.awayScore}` : time}
+    <div style={{ overflow:"hidden", position:"relative" }}>
+      <style>{`
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .carousel-track {
+          display: flex;
+          gap: 8px;
+          animation: scroll 30s linear infinite;
+          width: max-content;
+        }
+        .carousel-track:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+      <div className="carousel-track">
+        {[...fixtures, ...fixtures].map((f, i) => {
+          const d = new Date(f.date);
+          const day = d.toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" });
+          const time = d.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit" });
+          const hasScore = f.homeScore !== null && f.homeScore !== undefined;
+          return (
+            <div key={i} style={{
+              background:C.surface, border:`1px solid ${C.border}`, borderRadius:8,
+              padding:"8px 10px", flexShrink:0, minWidth:140, textAlign:"center",
+            }}>
+              <div style={{ fontSize:8, color:C.muted, marginBottom:6 }}>{day}</div>
+              <div style={{ fontSize:10, fontWeight:600, color:C.text, marginBottom:2 }}>{f.home}</div>
+              <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:hasScore?C.accent:C.muted, margin:"4px 0" }}>
+                {hasScore ? `${f.homeScore} - ${f.awayScore}` : time}
+              </div>
+              <div style={{ fontSize:10, fontWeight:600, color:C.text, marginTop:2 }}>{f.away}</div>
             </div>
-            <div style={{ fontSize:10, fontWeight:600, color:C.text, marginTop:2 }}>{f.away}</div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   </div>
 )}
