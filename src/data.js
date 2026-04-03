@@ -1,3 +1,35 @@
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+const SHEET_ID = import.meta.env.VITE_SHEET_ID;
+
+export async function fetchSheetData() {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?includeGridData=true&ranges=Main&fields=sheets.data.rowData.values(userEnteredValue,userEnteredFormat.backgroundColor)&key=${API_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch");
+  const json = await res.json();
+  return json.sheets[0].data[0].rowData.map(row => row.values || []);
+}
+
+export async function fetchOverallStats() {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Overall%20Stats!A1:K24?key=${API_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch stats");
+  const json = await res.json();
+  const rows = json.values || [];
+  return rows.slice(1).map(r => ({
+    player:       r[0]  || "",
+    ggWins:       parseFloat(r[1])  || 0,
+    gg:           parseFloat(r[2])  || 0,
+    ssWins:       parseFloat(r[3])  || 0,
+    ss:           parseFloat(r[4])  || 0,
+    wtaSplits:    parseFloat(r[5])  || 0,
+    wtaWins:      parseFloat(r[6])  || 0,
+    wtaRollovers: parseFloat(r[7])  || 0,
+    wta:          parseFloat(r[8])  || 0,
+    totalWins:    parseFloat(r[9])  || 0,
+    total:        parseFloat(r[10]) || 0,
+  })).filter(p => p.player && p.player !== "Total");
+}
+
 export async function fetchFixtures() {
   const res = await fetch("/api/fixtures");
   if (!res.ok) throw new Error("Failed to fetch fixtures");
@@ -12,8 +44,8 @@ export async function fetchFixtures() {
       away: m.awayTeam.shortName || m.awayTeam.name,
       date: m.utcDate,
       status: m.status,
-      homeScore: m.score?.fullTime?.home,
-      awayScore: m.score?.fullTime?.away,
+      homeScore: m.score && m.score.fullTime ? m.score.fullTime.home : null,
+      awayScore: m.score && m.score.fullTime ? m.score.fullTime.away : null,
     }))
   };
 }
@@ -32,7 +64,9 @@ export async function fetchAllFixtures() {
       away: m.awayTeam.shortName || m.awayTeam.name,
       date: m.utcDate,
       status: m.status,
-      homeScore: m.score?.fullTime?.home,
-      awayScore: m.score?.fullTime?.away,
+      homeScore: m.score && m.score.fullTime ? m.score.fullTime.home : null,
+      awayScore: m.score && m.score.fullTime ? m.score.fullTime.away : null,
     });
   });
+  return byGW;
+}
