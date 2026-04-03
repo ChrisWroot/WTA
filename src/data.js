@@ -30,15 +30,10 @@ export async function fetchOverallStats() {
     total:        parseFloat(r[10]) || 0,
   })).filter(p => p.player && p.player !== "Total");
 }
-
 export async function fetchFixtures() {
-  const url = `https://api.football-data.org/v4/competitions/PL/matches?status=SCHEDULED&limit=20`;
-  const res = await fetch(url, {
-    headers: { "X-Auth-Token": FOOTBALL_API_KEY }
-  });
+  const res = await fetch("/api/fixtures");
   if (!res.ok) throw new Error("Failed to fetch fixtures");
   const json = await res.json();
-  // Group by matchday and return the next matchday's fixtures
   const matches = json.matches || [];
   if (!matches.length) return [];
   const nextMatchday = matches[0].matchday;
