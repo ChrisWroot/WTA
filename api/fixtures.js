@@ -5,13 +5,17 @@ export default async function handler(req, res) {
   if (type === "all") {
     url = "https://api.football-data.org/v4/competitions/PL/matches?season=2024";
   } else {
-    url = "https://api.football-data.org/v4/competitions/PL/matches?status=SCHEDULED&status=IN_PLAY&status=PAUSED&limit=20";
+    url = "https://api.football-data.org/v4/competitions/PL/matches?status=SCHEDULED,IN_PLAY,PAUSED&limit=20";
   }
 
-  const response = await fetch(url, {
-    headers: { "X-Auth-Token": process.env.VITE_FOOTBALL_API_KEY }
-  });
-  const data = await response.json();
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.status(200).json(data);
+  try {
+    const response = await fetch(url, {
+      headers: { "X-Auth-Token": process.env.VITE_FOOTBALL_API_KEY }
+    });
+    const data = await response.json();
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }
