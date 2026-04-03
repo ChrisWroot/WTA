@@ -1,5 +1,6 @@
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 const SHEET_ID = import.meta.env.VITE_SHEET_ID;
+const FOOTBALL_API_KEY = import.meta.env.VITE_FOOTBALL_API_KEY;
 
 export async function fetchSheetData() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?includeGridData=true&ranges=Main&fields=sheets.data.rowData.values(userEnteredValue,userEnteredFormat.backgroundColor)&key=${API_KEY}`;
@@ -28,4 +29,27 @@ export async function fetchOverallStats() {
     totalWins:    parseFloat(r[9])  || 0,
     total:        parseFloat(r[10]) || 0,
   })).filter(p => p.player && p.player !== "Total");
+}
+
+export async function fetchFixtures() {
+  const url = `https://api.football-data.org/v4/competitions/PL/matches?status=SCHEDULED&limit=20`;
+  const res = await fetch(url, {
+    headers: { "X-Auth-Token": FOOTBALL_API_KEY }
+  });
+  if (!res.ok) throw new Error("Failed to fetch fixtures");
+  const json = await res.json();
+  // Group by matchday and return the next matchday's fixtures
+  const matches = json.matches || [];
+  if (!matches.length) return [];
+  const nextMatchday = matches[0].matchday;
+  return matches
+    .filter(m => m.matchday === nextMatchday)
+    .map(m => ({
+      home: m.homeTeam.shortName || m.homeTeam.name,
+      away: m.awayTeam.shortName || m.awayTeam.name,
+      date: m.utcDate,
+      status: m.status,
+      homeScore: m.score?.fullTime?.home,
+      awayScore: m.score?.fullTime?.away,
+    }));
 }
