@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
-import { fetchSheetData, fetchOverallStats, fetchFixtures, fetchAllFixtures } from "./data.js";import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS, GAME_COLS } from "./constants.js";
+import { fetchSheetData, fetchOverallStats } from "./data.js";
+import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS, GAME_COLS } from "./constants.js";
 const ABBR_FULL = {
   ARS:"Arsenal",MCI:"Man City",LIV:"Liverpool",TOT:"Spurs",CHE:"Chelsea",
   MUN:"Man Utd",NEW:"Newcastle",AVL:"Aston Villa",BHA:"Brighton",BOU:"Bournemouth",
@@ -80,33 +81,21 @@ export default function App() {
   const [historyMode, setHistoryMode] = useState("player");
   const [overallStats, setOverallStats] = useState([]);
   const [prizeTab, setPrizeTab] = useState("total");
-  const [fixtures, setFixtures] = useState([]);
-  const [fixtures, setFixtures] = useState({ gameweek: null, fixtures: [] });
-const [allFixtures, setAllFixtures] = useState({});
-const [fixtureGW, setFixtureGW] = useState(null);
 
-useEffect(() => {
-  Promise.all([fetchSheetData(), fetchOverallStats(), fetchFixtures(), fetchAllFixtures()])
-    .then(([sheetData, stats, fixtureData, allFixtureData]) => {
-      const parsed = parseSheetData(sheetData);
-      const hasData = Object.values(parsed).some(s =>
-        Object.values(s).some(game => Object.keys(game.picks).length > 0)
-      );
-      if (hasData) setAllData(parsed);
-      if (stats.length > 0) setOverallStats(stats);
-      if (fixtureData.fixtures.length > 0) {
-        setFixtures(fixtureData);
-        setFixtureGW(fixtureData.gameweek);
-      }
-      if (Object.keys(allFixtureData).length > 0) {
-        setAllFixtures(allFixtureData);
-        if (fixtureData.gameweek) setFixtureGW(fixtureData.gameweek);
-      }
-      setLoading(false);
-    })
-    .catch(() => { setLiveError(true); setLoading(false); });
-}, []);
-  
+  useEffect(() => {
+    Promise.all([fetchSheetData(), fetchOverallStats()])
+      .then(([sheetData, stats]) => {
+        const parsed = parseSheetData(sheetData);
+        const hasData = Object.values(parsed).some(s =>
+          Object.values(s).some(game => Object.keys(game.picks).length > 0)
+        );
+        if (hasData) setAllData(parsed);
+        if (stats.length > 0) setOverallStats(stats);
+        setLoading(false);
+      })
+      .catch(() => { setLiveError(true); setLoading(false); });
+  }, []);
+
   const games = Object.keys(allData[season]);
   const gameData = allData[season][selectedGame];
   const rounds = gameData ? gameData.rounds : [];
@@ -445,7 +434,9 @@ useEffect(() => {
         <div style={{ maxWidth:1000, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
           <div>
             <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:4, color:C.accent, lineHeight:1 }}>WINNER TAKES ALL</div>
-<div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, marginBottom:8 }}>GW{fixtures.gameweek} FIXTURES</div>          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <div style={{ fontSize:8, color:"#2a3a5a", letterSpacing:2, marginTop:2 }}>LAST MAN STANDING TRACKER</div>
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             {loading && <span style={{ fontSize:9, color:C.amber }}>⟳ syncing...</span>}
             {liveError && <span style={{ fontSize:9, color:C.muted }}>offline mode</span>}
           </div>
@@ -471,49 +462,6 @@ useEffect(() => {
             <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
               {games.map(g => <button key={g} style={pill(selectedGame===g)} onClick={()=>setSelectedGame(g)}>{g.replace("Game","Round")}</button>)}
             </div>
-{fixtures.length > 0 && (
-  <div style={{ overflow:"hidden", marginBottom:14 }}>
-    <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, marginBottom:8 }}>UPCOMING FIXTURES</div>
-    <div style={{ overflow:"hidden", position:"relative" }}>
-      <style>{`
-        @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .carousel-track {
-          display: flex;
-          gap: 8px;
-          animation: scroll 30s linear infinite;
-          width: max-content;
-        }
-        .carousel-track:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
-      <div className="carousel-track">
-        {[...fixtures, ...fixtures].map((f, i) => {
-          const d = new Date(f.date);
-          const day = d.toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" });
-          const time = d.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit" });
-          const hasScore = f.homeScore !== null && f.homeScore !== undefined;
-          return (
-            <div key={i} style={{
-              background:C.surface, border:`1px solid ${C.border}`, borderRadius:8,
-              padding:"8px 10px", flexShrink:0, minWidth:140, textAlign:"center",
-            }}>
-              <div style={{ fontSize:8, color:C.muted, marginBottom:6 }}>{day}</div>
-              <div style={{ fontSize:10, fontWeight:600, color:C.text, marginBottom:2 }}>{f.home}</div>
-              <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:hasScore?C.accent:C.muted, margin:"4px 0" }}>
-                {hasScore ? `${f.homeScore} - ${f.awayScore}` : time}
-              </div>
-              <div style={{ fontSize:10, fontWeight:600, color:C.text, marginTop:2 }}>{f.away}</div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  </div>
-)}
             {gameData && (
               <div>
                 <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
@@ -565,6 +513,37 @@ useEffect(() => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {Object.keys(allFixtures).length > 0 && (
+              <div style={{ marginTop:16 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+                  <button onClick={()=>setFixtureGW(gw=>Math.max(1,gw-1))} style={{ ...pill(false), padding:"4px 8px" }}>←</button>
+                  <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, flex:1, textAlign:"center" }}>GAMEWEEK {fixtureGW}</div>
+                  <button onClick={()=>setFixtureGW(gw=>Math.min(38,gw+1))} style={{ ...pill(false), padding:"4px 8px" }}>→</button>
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                  {(allFixtures[fixtureGW]||[]).map((f,i) => {
+                    const d = new Date(f.date);
+                    const day = d.toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" });
+                    const time = d.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit" });
+                    const hasScore = f.homeScore !== null && f.homeScore !== undefined;
+                    const isLive = f.status === "IN_PLAY" || f.status === "PAUSED";
+                    return (
+                      <div key={i} style={{ background:C.surface, border:`1px solid ${isLive?C.green:C.border}`, borderRadius:8, padding:"8px 12px", display:"flex", alignItems:"center", gap:10 }}>
+                        <div style={{ fontSize:9, color:C.muted, minWidth:80 }}>{day} {time}</div>
+                        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
+                          <span style={{ fontSize:11, fontWeight:600, color:C.text, flex:1, textAlign:"right" }}>{f.home}</span>
+                          <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, color:hasScore?C.accent:isLive?C.green:C.muted, minWidth:50, textAlign:"center" }}>
+                            {hasScore ? `${f.homeScore}-${f.awayScore}` : isLive ? "LIVE" : "vs"}
+                          </span>
+                          <span style={{ fontSize:11, fontWeight:600, color:C.text, flex:1 }}>{f.away}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
