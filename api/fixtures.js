@@ -3,7 +3,7 @@ export default async function handler(req, res) {
   
   let url;
   if (type === "all") {
-    url = "https://api.football-data.org/v4/competitions/PL/matches?season=2024";
+    url = "https://api.football-data.org/v4/competitions/PL/matches?season=2025";
   } else {
     url = "https://api.football-data.org/v4/competitions/PL/matches?status=SCHEDULED,IN_PLAY,PAUSED&limit=20";
   }
