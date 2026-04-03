@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { fetchSheetData, fetchOverallStats, fetchFixtures } from "./data.js";
-import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS, GAME_COLS } from "./constants.js";
+import { fetchSheetData, fetchOverallStats, fetchFixtures, fetchAllFixtures } from "./data.js";import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS, GAME_COLS } from "./constants.js";
 const ABBR_FULL = {
   ARS:"Arsenal",MCI:"Man City",LIV:"Liverpool",TOT:"Spurs",CHE:"Chelsea",
   MUN:"Man Utd",NEW:"Newcastle",AVL:"Aston Villa",BHA:"Brighton",BOU:"Bournemouth",
@@ -82,17 +81,27 @@ export default function App() {
   const [overallStats, setOverallStats] = useState([]);
   const [prizeTab, setPrizeTab] = useState("total");
   const [fixtures, setFixtures] = useState([]);
+  const [fixtures, setFixtures] = useState({ gameweek: null, fixtures: [] });
+const [allFixtures, setAllFixtures] = useState({});
+const [fixtureGW, setFixtureGW] = useState(null);
 
-  useEffect(() => {
-  Promise.all([fetchSheetData(), fetchOverallStats(), fetchFixtures()])
-    .then(([sheetData, stats, fixtureData]) => {
+useEffect(() => {
+  Promise.all([fetchSheetData(), fetchOverallStats(), fetchFixtures(), fetchAllFixtures()])
+    .then(([sheetData, stats, fixtureData, allFixtureData]) => {
       const parsed = parseSheetData(sheetData);
       const hasData = Object.values(parsed).some(s =>
         Object.values(s).some(game => Object.keys(game.picks).length > 0)
       );
       if (hasData) setAllData(parsed);
       if (stats.length > 0) setOverallStats(stats);
-      if (fixtureData.length > 0) setFixtures(fixtureData);
+      if (fixtureData.fixtures.length > 0) {
+        setFixtures(fixtureData);
+        setFixtureGW(fixtureData.gameweek);
+      }
+      if (Object.keys(allFixtureData).length > 0) {
+        setAllFixtures(allFixtureData);
+        if (fixtureData.gameweek) setFixtureGW(fixtureData.gameweek);
+      }
       setLoading(false);
     })
     .catch(() => { setLiveError(true); setLoading(false); });
@@ -436,9 +445,7 @@ export default function App() {
         <div style={{ maxWidth:1000, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
           <div>
             <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:4, color:C.accent, lineHeight:1 }}>WINNER TAKES ALL</div>
-            <div style={{ fontSize:8, color:"#2a3a5a", letterSpacing:2, marginTop:2 }}>LAST MAN STANDING TRACKER</div>
-          </div>
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+<div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, marginBottom:8 }}>GW{fixtures.gameweek} FIXTURES</div>          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             {loading && <span style={{ fontSize:9, color:C.amber }}>⟳ syncing...</span>}
             {liveError && <span style={{ fontSize:9, color:C.muted }}>offline mode</span>}
           </div>
