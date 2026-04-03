@@ -81,6 +81,9 @@ export default function App() {
   const [historyMode, setHistoryMode] = useState("player");
   const [overallStats, setOverallStats] = useState([]);
   const [prizeTab, setPrizeTab] = useState("total");
+  const [fixtures, setFixtures] = useState({ gameweek: null, fixtures: [] });
+const [allFixtures, setAllFixtures] = useState({});
+const [fixtureGW, setFixtureGW] = useState(null);
 
   useEffect(() => {
     Promise.all([fetchSheetData(), fetchOverallStats()])
