@@ -28,7 +28,7 @@ export const PRIZE_OUTCOMES = {
     "Game 7": { result: "rollover", winners: [] },
     "Game 8": { result: "split", winners: ["Chris D", "Phil"] },
     "Game 9": { result: "win", winners: ["Franklin"] },
-    "Game 10": { result: "rollover", winners: [] }
+    "Game 10": { result: "rollover", winners: [] },
     "Game 11": { result: "inprogress", winners: [] },
   }
 };
