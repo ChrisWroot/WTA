@@ -10,7 +10,7 @@ export async function fetchSheetData() {
 }
 
 export async function fetchOverallStats() {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Overall%20Stats!A1:K24?key=${API_KEY}`;
+const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?includeGridData=true&ranges=Main&fields=sheets.data.rowData.values(userEnteredValue,userEnteredFormat.backgroundColor),sheets.merges&key=${API_KEY}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch stats");
   const json = await res.json();
