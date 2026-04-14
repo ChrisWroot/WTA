@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { fetchSheetData, fetchOverallStats, fetchFixtures, fetchAllFixtures } from "./data.js";
-import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS, GAME_COLS } from "./constants.js";
+import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS } from "./constants.js";
 const ABBR_FULL = {
   ARS:"Arsenal",MCI:"Man City",LIV:"Liverpool",TOT:"Spurs",CHE:"Chelsea",
   MUN:"Man Utd",NEW:"Newcastle",AVL:"Aston Villa",BHA:"Brighton",BOU:"Bournemouth",
@@ -19,44 +19,70 @@ function getCellColor(rowData, colIdx) {
 }
 
 function parseSheetData(formattedRows) {
+  const headerRow = formattedRows[0] || [];
   const roundRow = formattedRows[1] || [];
   const result = {};
-  Object.entries(GAME_COLS).forEach(([season, games]) => {
-    result[season] = {};
-    Object.entries(games).forEach(([gameName, { start, end }]) => {
-      const rounds = [];
-      for (let c = start; c <= end; c++) {
-        const val = roundRow[c]?.userEnteredValue?.numberValue;
-        if (val !== undefined) rounds.push(Math.round(val));
+
+  const gameMap = {};
+  headerRow.forEach((cell, colIdx) => {
+    const val = (cell?.userEnteredValue?.stringValue || "").trim();
+    const match = val.match(/(\d{4})\s+Round\s+(\d+)/i);
+    if (match) {
+      const season = match[1];
+      const gameKey = `Game ${match[2]}`;
+      const mapKey = `${season}|${gameKey}`;
+      if (!gameMap[mapKey]) {
+        gameMap[mapKey] = { season, gameKey, start: colIdx, end: colIdx };
+      } else {
+        gameMap[mapKey].end = colIdx;
       }
-      const picks = {};
-      for (let r = 2; r <= 21; r++) {
-        const playerRow = formattedRows[r];
-        if (!playerRow) continue;
-        const playerCell = playerRow[0]?.userEnteredValue?.stringValue;
-        if (!playerCell) continue;
-        const player = playerCell.trim();
-        const playerPicks = [];
-        for (let c = start; c <= end; c++) {
-          const roundNum = roundRow[c]?.userEnteredValue?.numberValue;
-          if (!roundNum) continue;
-          const cellVal = playerRow[c]?.userEnteredValue?.stringValue;
-          if (!cellVal || cellVal.trim() === "") continue;
-          const trimmed = cellVal.trim().toLowerCase();
-          if (trimmed === "-" || trimmed === "np") {
-            playerPicks.push({ r: Math.round(roundNum), t: "NP", w: false, np: true });
-            continue;
-          }
-          const t = cellVal.trim();
-          const color = getCellColor(playerRow, c);
-          const w = color === "green" ? true : color === "red" ? false : null;
-          playerPicks.push({ r: Math.round(roundNum), t, w });
-        }
-        if (playerPicks.length > 0) picks[player] = playerPicks;
-      }
-      result[season][gameName] = { rounds, picks };
-    });
+    }
   });
+
+  const entries = Object.values(gameMap).sort((a, b) => a.start - b.start);
+  entries.forEach((entry, i) => {
+    if (i + 1 < entries.length) {
+      entry.end = entries[i + 1].start - 1;
+    } else {
+      entry.end = headerRow.length - 1;
+    }
+  });
+
+  entries.forEach(({ season, gameKey, start, end }) => {
+    if (!result[season]) result[season] = {};
+    const rounds = [];
+    for (let c = start; c <= end; c++) {
+      const val = roundRow[c]?.userEnteredValue?.numberValue;
+      if (val !== undefined) rounds.push(Math.round(val));
+    }
+    const picks = {};
+    for (let r = 2; r <= 21; r++) {
+      const playerRow = formattedRows[r];
+      if (!playerRow) continue;
+      const playerCell = playerRow[0]?.userEnteredValue?.stringValue;
+      if (!playerCell) continue;
+      const player = playerCell.trim();
+      const playerPicks = [];
+      for (let c = start; c <= end; c++) {
+        const roundNum = roundRow[c]?.userEnteredValue?.numberValue;
+        if (!roundNum) continue;
+        const cellVal = playerRow[c]?.userEnteredValue?.stringValue;
+        if (!cellVal || cellVal.trim() === "") continue;
+        const trimmed = cellVal.trim().toLowerCase();
+        if (trimmed === "-" || trimmed === "np") {
+          playerPicks.push({ r: Math.round(roundNum), t: "NP", w: false, np: true });
+          continue;
+        }
+        const t = cellVal.trim();
+        const color = getCellColor(playerRow, c);
+        const w = color === "green" ? true : color === "red" ? false : null;
+        playerPicks.push({ r: Math.round(roundNum), t, w });
+      }
+      if (playerPicks.length > 0) picks[player] = playerPicks;
+    }
+    result[season][gameKey] = { rounds, picks };
+  });
+
   return result;
 }
 
@@ -523,7 +549,7 @@ export default function App() {
                   <div>
                     <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>Round Outcome</div>
                     <div style={{ fontSize:11, color:season==="2025"&&selectedGame==="Game 10"?C.amber:survivors.length===0?C.red:C.green, fontWeight:500 }}>
-                      {season==="2025"&&selectedGame==="Game 10"?"🟡 In progress":survivors.length===0?"🔴 Rollover — no survivors":survivors.length===1?"🏆 Winner: "+survivors[0]:"🤝 Split: "+survivors.join(" & ")}
+                      survivors.length===0?"🔴 Rollover — no survivors":survivors.length===1?"🏆 Winner: "+survivors[0]:"🤝 Split: "+survivors.join(" & ")}
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:16, marginLeft:"auto" }}>
