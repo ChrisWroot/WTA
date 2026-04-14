@@ -14,10 +14,16 @@ export async function fetchSheetData() {
 }
 
 export async function fetchOverallStats() {
-const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?includeGridData=true&ranges=Main&fields=sheets.data.rowData.values(userEnteredValue,userEnteredFormat.backgroundColor),sheets.merges&key=${API_KEY}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Overall%20Stats!A1:K24?key=${API_KEY}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch stats");
+  console.log("Overall Stats status:", res.status);
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Overall Stats error:", text);
+    throw new Error("Failed to fetch stats");
+  }
   const json = await res.json();
+  console.log("Overall Stats data:", json);
   const rows = json.values || [];
   return rows.slice(1).map(r => ({
     player:       r[0]  || "",
