@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { fetchSheetData, fetchOverallStats, fetchFixtures, fetchAllFixtures } from "./data.js";
-import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS } from "./constants.js";
+import { STATIC_DATA, PRIZE_OUTCOMES, PLAYERS, TEAM_COLORS, GAME_COLS } from "./constants.js";
 const ABBR_FULL = {
   ARS:"Arsenal",MCI:"Man City",LIV:"Liverpool",TOT:"Spurs",CHE:"Chelsea",
   MUN:"Man Utd",NEW:"Newcastle",AVL:"Aston Villa",BHA:"Brighton",BOU:"Bournemouth",
