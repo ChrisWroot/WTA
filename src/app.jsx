@@ -104,7 +104,11 @@ export default function App() {
         }
         setLoading(false);
       })
-      .catch(() => { setLiveError(true); setLoading(false); });
+      .catch((err) => { 
+  console.error("Fetch error:", err);
+  setLiveError(true); 
+  setLoading(false); 
+});
   }, []);
 
   const games = Object.keys(allData[season]);
