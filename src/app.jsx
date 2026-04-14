@@ -23,30 +23,21 @@ function parseSheetData(formattedRows) {
   const roundRow = formattedRows[1] || [];
   const result = {};
 
-  const gameMap = {};
+  // Find game boundaries from header row (merged cells — only first col has value)
+  const gameStarts = [];
   headerRow.forEach((cell, colIdx) => {
     const val = (cell?.userEnteredValue?.stringValue || "").trim();
     const match = val.match(/(\d{4})\s+Round\s+(\d+)/i);
     if (match) {
-      const season = match[1];
-      const gameKey = `Game ${match[2]}`;
-      const mapKey = `${season}|${gameKey}`;
-      if (!gameMap[mapKey]) {
-        gameMap[mapKey] = { season, gameKey, start: colIdx, end: colIdx };
-      } else {
-        gameMap[mapKey].end = colIdx;
-      }
+      gameStarts.push({ season: match[1], gameKey: `Game ${match[2]}`, start: colIdx });
     }
   });
 
-  const entries = Object.values(gameMap).sort((a, b) => a.start - b.start);
-  entries.forEach((entry, i) => {
-    if (i + 1 < entries.length) {
-      entry.end = entries[i + 1].start - 1;
-    } else {
-      entry.end = headerRow.length - 1;
-    }
-  });
+  // Set end of each game to one before the next game starts
+  const entries = gameStarts.map((g, i) => ({
+    ...g,
+    end: i + 1 < gameStarts.length ? gameStarts[i + 1].start - 1 : roundRow.length - 1,
+  }));
 
   entries.forEach(({ season, gameKey, start, end }) => {
     if (!result[season]) result[season] = {};
