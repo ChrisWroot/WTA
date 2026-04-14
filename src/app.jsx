@@ -70,10 +70,10 @@ export default function App() {
   const [allData, setAllData] = useState(STATIC_DATA);
   const [loading, setLoading] = useState(true);
   const [liveError, setLiveError] = useState(false);
-  const lastSeason = Object.keys(STATIC_DATA).at(-1);
-  const lastGame = Object.keys(STATIC_DATA[lastSeason]).at(-1);
-  const [season, setSeason] = useState(lastSeason);
-  const [selectedGame, setSelectedGame] = useState(lastGame);
+ const lastSeason = Object.keys(GAME_COLS).at(-1);
+const lastGame = Object.keys(GAME_COLS[lastSeason]).at(-1);
+const [season, setSeason] = useState(lastSeason);
+const [selectedGame, setSelectedGame] = useState(lastGame);
   const [activeTab, setActiveTab] = useState("grid");
   const [historyPlayer, setHistoryPlayer] = useState("Ed");
   const [recordsTab, setRecordsTab] = useState("best");
@@ -526,9 +526,15 @@ export default function App() {
                 <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
                   <div>
                     <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>Round Outcome</div>
-                    <div style={{ fontSize:11, color:season==="2025"&&selectedGame==="Game 10"?C.amber:survivors.length===0?C.red:C.green, fontWeight:500 }}>
-                      {survivors.length===0?"🔴 Rollover — no survivors":survivors.length===1?"🏆 Winner: "+survivors[0]:"🤝 Split: "+survivors.join(" & ")}
-                    </div>
+                    <div style={{ fontSize:11, color:survivors.length===0?C.red:C.green, fontWeight:500 }}>
+  {entrants.every(e => e.eliminated)
+    ? survivors.length===0
+      ? "🔴 Rollover — no survivors"
+      : survivors.length===1
+        ? "🏆 Winner: "+survivors[0]
+        : "🤝 Split: "+survivors.join(" & ")
+    : "🟡 In progress"}
+</div>
                   </div>
                   <div style={{ display:"flex", gap:16, marginLeft:"auto" }}>
                     {[{l:"Entered",v:entrants.length,c:C.accent},{l:"Survived",v:survivors.length,c:C.green},{l:"Eliminated",v:entrants.filter(e=>e.eliminated).length,c:C.red}].map(s=>(
