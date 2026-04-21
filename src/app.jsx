@@ -1072,7 +1072,7 @@ export default function App() {
         {activeTab==="prize" && (
           <div>
             <div style={{ display:"flex", gap:0, marginBottom:16, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
-              {[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","WTA 24/25-25/26"],["gg","Goal Guess"],["ss","Sweepstake"],["wroot","Wroot %"]].map(([v,l]) => (
+              {[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","Winning History"],["gg","Goal Guess"],["ss","Sweepstake"],["wroot","Wroot %"]].map(([v,l]) => (
                 <button key={v} onClick={()=>setPrizeTab(v)} style={{
                   padding:"9px 12px", cursor:"pointer", fontFamily:"inherit",
                   fontSize:9, letterSpacing:1.2, textTransform:"uppercase", border:"none",
