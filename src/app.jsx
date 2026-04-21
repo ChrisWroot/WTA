@@ -1130,24 +1130,6 @@ export default function App() {
 
             {prizeTab==="wtacalc" && (
               <div>
-                <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>NET WINNINGS — 24/25 & 25/26 SEASONS</div>
-                <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:22 }}>
-                  {prizeData.leaderboard.map((p,i) => (
-                    <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
-                        <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
-                        <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
-                          <span style={{ color:C.green }}>Won £{p.won%1===0?p.won:p.won.toFixed(2)}</span>
-                          <span style={{ color:C.muted }}>Spent £{p.spent}</span>
-                          <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, minWidth:60, textAlign:"right", color:p.net>0?C.green:p.net<0?C.red:C.muted }}>
-                            {p.net>0?"+":""}£{p.net%1===0?p.net:p.net.toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
                 <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ROUND BY ROUND</div>
                 <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                   {prizeData.games.map(g => {
