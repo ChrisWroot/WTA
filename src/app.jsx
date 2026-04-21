@@ -70,10 +70,10 @@ export default function App() {
   const [allData, setAllData] = useState(STATIC_DATA);
   const [loading, setLoading] = useState(true);
   const [liveError, setLiveError] = useState(false);
- const lastSeason = Object.keys(GAME_COLS).at(-1);
-const lastGame = Object.keys(GAME_COLS[lastSeason]).at(-1);
-const [season, setSeason] = useState(lastSeason);
-const [selectedGame, setSelectedGame] = useState(lastGame);
+  const lastSeason = Object.keys(STATIC_DATA).at(-1);
+  const lastGame = Object.keys(STATIC_DATA[lastSeason]).at(-1);
+  const [season, setSeason] = useState(lastSeason);
+  const [selectedGame, setSelectedGame] = useState(lastGame);
   const [activeTab, setActiveTab] = useState("grid");
   const [historyPlayer, setHistoryPlayer] = useState("Ed");
   const [recordsTab, setRecordsTab] = useState("best");
@@ -104,11 +104,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
         }
         setLoading(false);
       })
-      .catch((err) => { 
-  console.error("Fetch error:", err);
-  setLiveError(true); 
-  setLoading(false); 
-});
+      .catch(() => { setLiveError(true); setLoading(false); });
   }, []);
 
   const games = Object.keys(allData[season]);
@@ -271,8 +267,10 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
     const obsessions = Object.entries(allPicksByPlayer).map(([player, picks]) => {
       const tc = {};
       picks.forEach(pk => { tc[pk.t] = (tc[pk.t]||0) + 1; });
-      const top = Object.entries(tc).sort((a,b) => b[1]-a[1])[0];
-      return { player, team: top[0], count: top[1] };
+      const sorted = Object.entries(tc).sort((a,b) => b[1]-a[1]);
+      const topCount = sorted[0][1];
+      const topTeams = sorted.filter(([,c]) => c === topCount).map(([t]) => t);
+      return { player, teams: topTeams, team: topTeams[0], count: topCount };
     }).sort((a,b) => b.count - a.count);
 
     // 5+6. Contrarian & follower
@@ -526,15 +524,9 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
                 <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
                   <div>
                     <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>Round Outcome</div>
-                    <div style={{ fontSize:11, color:survivors.length===0?C.red:C.green, fontWeight:500 }}>
-  {entrants.every(e => e.eliminated)
-    ? survivors.length===0
-      ? "🔴 Rollover — no survivors"
-      : survivors.length===1
-        ? "🏆 Winner: "+survivors[0]
-        : "🤝 Split: "+survivors.join(" & ")
-    : "🟡 In progress"}
-</div>
+                    <div style={{ fontSize:11, color:season==="2025"&&selectedGame==="Game 10"?C.amber:survivors.length===0?C.red:C.green, fontWeight:500 }}>
+                      {season==="2025"&&selectedGame==="Game 10"?"🟡 In progress":survivors.length===0?"🔴 Rollover — no survivors":survivors.length===1?"🏆 Winner: "+survivors[0]:"🤝 Split: "+survivors.join(" & ")}
+                    </div>
                   </div>
                   <div style={{ display:"flex", gap:16, marginLeft:"auto" }}>
                     {[{l:"Entered",v:entrants.length,c:C.accent},{l:"Survived",v:survivors.length,c:C.green},{l:"Eliminated",v:entrants.filter(e=>e.eliminated).length,c:C.red}].map(s=>(
@@ -884,7 +876,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
         )}
 
         {activeTab==="stats" && (
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:10 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:8 }}>
 
             {/* 1. Longest winning streak */}
             <div style={card({})}>
@@ -892,7 +884,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
               {statsData.winStreaks.slice(0,1).map((s,i) => (
                 <div key={s.player}>
                   <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:36, color:C.green, lineHeight:1 }}>{s.streak}</span>
+                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.green, lineHeight:1 }}>{s.streak}</span>
                     <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{s.player}</span>
                   </div>
                   <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>consecutive wins — ended {s.end.season==="2024"?"24/25":"25/26"} {s.end.game.replace("Game","Round")} GW{s.end.r}</div>
@@ -906,7 +898,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
               {statsData.loseStreaks.slice(0,1).map((s,i) => (
                 <div key={s.player}>
                   <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:36, color:C.red, lineHeight:1 }}>{s.streak}</span>
+                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.red, lineHeight:1 }}>{s.streak}</span>
                     <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{s.player}</span>
                   </div>
                   <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>consecutive losses — ended {s.end.season==="2024"?"24/25":"25/26"} {s.end.game.replace("Game","Round")} GW{s.end.r}</div>
@@ -921,7 +913,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
                 {statsData.activeStreaks.slice(0,1).map(s => (
                   <div key={s.player}>
                     <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-                      <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:36, color:C.amber, lineHeight:1 }}>{s.streak}</span>
+                      <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.amber, lineHeight:1 }}>{s.streak}</span>
                       <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{s.player}</span>
                     </div>
                     <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>wins in a row and counting</div>
@@ -933,15 +925,24 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
             {/* 4. Team obsession */}
             <div style={card({})}>
               <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>❤️ Biggest Team Obsession</div>
-              {statsData.obsessions.slice(0,1).map(s => (
-                <div key={s.player}>
-                  <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:36, color:TEAM_COLORS[s.team]||C.accent, lineHeight:1 }}>{s.count}x</span>
-                    <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{s.player} — <span style={tbadge(s.team)}>{s.team}</span></span>
+              {(() => {
+                const topCount = statsData.obsessions[0]?.count;
+                const tied = statsData.obsessions.filter(s => s.count === topCount);
+                return tied.map(s => (
+                  <div key={s.player} style={{ marginBottom: tied.length > 1 ? 6 : 0 }}>
+                    <div style={{ display:"flex", alignItems:"baseline", gap:6, flexWrap:"wrap" }}>
+                      <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:TEAM_COLORS[s.teams[0]]||C.accent, lineHeight:1 }}>{s.count}x</span>
+                      <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{s.player}</span>
+                    </div>
+                    <div style={{ display:"flex", gap:4, flexWrap:"wrap", marginTop:4 }}>
+                      {s.teams.map((t,i) => (
+                        <span key={t}><span style={tbadge(t)}>{t}</span></span>
+                      ))}
+                    </div>
                   </div>
-                  <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>most times picking the same team</div>
-                </div>
-              ))}
+                ));
+              })()}
+              <div style={{ fontSize:9, color:C.muted, marginTop:6 }}>most times picking the same team</div>
             </div>
 
             {/* 5. Most contrarian */}
@@ -975,7 +976,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
               <div style={card({})}>
                 <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>🩸 Bloodiest Gameweek</div>
                 <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:36, color:C.red, lineHeight:1 }}>{statsData.bloodyGw[0].count}</span>
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.red, lineHeight:1 }}>{statsData.bloodyGw[0].count}</span>
                   <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{statsData.bloodyGw[0].gw}</span>
                 </div>
                 <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>players eliminated in a single gameweek</div>
@@ -986,7 +987,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
             <div style={card({})}>
               <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>👥 Does The Crowd Pick Win?</div>
               <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:36, color:C.green, lineHeight:1 }}>{Math.round(statsData.crowdWins/statsData.crowdTotal*100)}%</span>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.green, lineHeight:1 }}>{Math.round(statsData.crowdWins/statsData.crowdTotal*100)}%</span>
                 <span style={{ fontSize:11, color:C.text }}>of the time</span>
               </div>
               <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>{statsData.crowdWins} wins out of {statsData.crowdTotal} gameweeks</div>
@@ -996,7 +997,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
             <div style={card({})}>
               <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>📅 Most Games Entered</div>
               <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:36, color:C.accent, lineHeight:1 }}>{statsData.mostGames[0][1]}</span>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.accent, lineHeight:1 }}>{statsData.mostGames[0][1]}</span>
                 <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{statsData.mostGames.filter(([,c]) => c === statsData.mostGames[0][1]).map(([p]) => p).join(", ")}</span>
               </div>
               <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>rounds entered across all seasons</div>
@@ -1006,7 +1007,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
             <div style={card({})}>
               <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>🎯 Most Total Picks</div>
               <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:36, color:C.accent, lineHeight:1 }}>{statsData.mostPicks[0].count}</span>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.accent, lineHeight:1 }}>{statsData.mostPicks[0].count}</span>
                 <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{statsData.mostPicks.filter(p => p.count === statsData.mostPicks[0].count).map(p => p.player).join(", ")}</span>
               </div>
               <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>total selections made across all rounds</div>
@@ -1018,7 +1019,7 @@ const [selectedGame, setSelectedGame] = useState(lastGame);
               {statsData.topPairs.slice(0,1).map(p => (
                 <div key={p.pair.join("&")}>
                   <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:36, color:C.accent, lineHeight:1 }}>{p.pct}%</span>
+                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.accent, lineHeight:1 }}>{p.pct}%</span>
                     <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{p.pair[0]} & {p.pair[1]}</span>
                   </div>
                   <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>same pick in {p.matches} of {p.total} shared gameweeks</div>
