@@ -118,18 +118,19 @@ export default function App() {
       roundsLasted: picks.filter(p => p.w !== null).length,
     }));
     return mapped.sort((a, b) => {
-      if (!a.eliminated && !b.eliminated) {
-        // Sort alive players by picks alphabetically from latest round backwards
+            if (!a.eliminated && !b.eliminated) {
         const aAlive = a.picks.filter(p => !p.np && p.t !== "NP");
         const bAlive = b.picks.filter(p => !p.np && p.t !== "NP");
-        const maxRounds = Math.max(aAlive.length, bAlive.length);
-        for (let i = maxRounds - 1; i >= 0; i--) {
-          const aTeam = aAlive[i]?.t || "ZZZ";
-          const bTeam = bAlive[i]?.t || "ZZZ";
+        // Get all round numbers sorted descending
+        const allRounds = [...new Set([...aAlive, ...bAlive].map(p => p.r))].sort((x,y) => y - x);
+        for (const r of allRounds) {
+          const aTeam = aAlive.find(p => p.r === r)?.t || "ZZZ";
+          const bTeam = bAlive.find(p => p.r === r)?.t || "ZZZ";
           if (aTeam !== bTeam) return aTeam.localeCompare(bTeam);
         }
         return a.player.localeCompare(b.player);
       }
+
       if (!a.eliminated) return -1;
       if (!b.eliminated) return 1;
       return b.roundsLasted - a.roundsLasted || a.player.localeCompare(b.player);
