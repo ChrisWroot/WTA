@@ -70,8 +70,8 @@ export default function App() {
   const [allData, setAllData] = useState(STATIC_DATA);
   const [loading, setLoading] = useState(true);
   const [liveError, setLiveError] = useState(false);
-  const lastSeason = Object.keys(STATIC_DATA).at(-1);
-  const lastGame = Object.keys(STATIC_DATA[lastSeason]).at(-1);
+  const lastSeason = Object.keys(GAME_COLS).at(-1);
+  const lastGame = Object.keys(GAME_COLS[lastSeason]).at(-1);
   const [season, setSeason] = useState(lastSeason);
   const [selectedGame, setSelectedGame] = useState(lastGame);
   const [activeTab, setActiveTab] = useState("grid");
@@ -524,8 +524,8 @@ export default function App() {
                 <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
                   <div>
                     <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>Round Outcome</div>
-                    <div style={{ fontSize:11, color:season==="2025"&&selectedGame==="Game 10"?C.amber:survivors.length===0?C.red:C.green, fontWeight:500 }}>
-                      {season==="2025"&&selectedGame==="Game 10"?"🟡 In progress":survivors.length===0?"🔴 Rollover — no survivors":survivors.length===1?"🏆 Winner: "+survivors[0]:"🤝 Split: "+survivors.join(" & ")}
+                    <div style={{ fontSize:11, color:entrants.every(e=>e.eliminated)?survivors.length===0?C.red:C.green:C.amber, fontWeight:500 }}>
+                      {entrants.every(e=>e.eliminated)?survivors.length===0?"🔴 Rollover — no survivors":survivors.length===1?"🏆 Winner: "+survivors[0]:"🤝 Split: "+survivors.join(" & "):"🟡 In progress"}
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:16, marginLeft:"auto" }}>
@@ -877,20 +877,6 @@ export default function App() {
 
         {activeTab==="stats" && (
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:8 }}>
-
-            {/* 1. Longest winning streak */}
-            <div style={card({})}>
-              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>🏆 Longest Winning Streak</div>
-              {statsData.winStreaks.slice(0,1).map((s,i) => (
-                <div key={s.player}>
-                  <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.green, lineHeight:1 }}>{s.streak}</span>
-                    <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{s.player}</span>
-                  </div>
-                  <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>consecutive wins — ended {s.end.season==="2024"?"24/25":"25/26"} {s.end.game.replace("Game","Round")} GW{s.end.r}</div>
-                </div>
-              ))}
-            </div>
 
             {/* 2. Longest losing streak */}
             <div style={card({})}>
