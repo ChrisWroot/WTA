@@ -113,16 +113,29 @@ export default function App() {
 
   const entrants = useMemo(() => {
     if (!gameData) return [];
-    return Object.entries(gameData.picks).map(([player, picks]) => ({
+    const mapped = Object.entries(gameData.picks).map(([player, picks]) => ({
       player, picks, eliminated: picks.some(p => p.w === false),
       roundsLasted: picks.filter(p => p.w !== null).length,
-    })).sort((a, b) => {
-      if (!a.eliminated && !b.eliminated) return a.player.localeCompare(b.player);
+    }));
+    return mapped.sort((a, b) => {
+      if (!a.eliminated && !b.eliminated) {
+        // Sort alive players by picks alphabetically from latest round backwards
+        const aAlive = a.picks.filter(p => !p.np && p.t !== "NP");
+        const bAlive = b.picks.filter(p => !p.np && p.t !== "NP");
+        const maxRounds = Math.max(aAlive.length, bAlive.length);
+        for (let i = maxRounds - 1; i >= 0; i--) {
+          const aTeam = aAlive[i]?.t || "ZZZ";
+          const bTeam = bAlive[i]?.t || "ZZZ";
+          if (aTeam !== bTeam) return aTeam.localeCompare(bTeam);
+        }
+        return a.player.localeCompare(b.player);
+      }
       if (!a.eliminated) return -1;
       if (!b.eliminated) return 1;
       return b.roundsLasted - a.roundsLasted || a.player.localeCompare(b.player);
     });
   }, [gameData]);
+
 
   const survivors = useMemo(() => getGameOutcome(gameData ? gameData.picks : {}), [gameData]);
 
