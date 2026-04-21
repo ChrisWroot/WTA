@@ -352,7 +352,7 @@ export default function App() {
       Object.entries(allData[s]).forEach(([game, gd]) => {
         const outcome = PRIZE_OUTCOMES[s][game];
         const ents = Object.values(gd.picks).filter(p => p.length > 0).length;
-        const gamePot = ents * ENTRY;
+        const gamePot = outcome.overridePot !== undefined ? outcome.overridePot : ents * ENTRY;
         const totalPot = gamePot + rolledOver;
         let winnings = {};
         if (outcome.result === "win") {
@@ -1072,7 +1072,7 @@ export default function App() {
         {activeTab==="prize" && (
           <div>
             <div style={{ display:"flex", gap:0, marginBottom:16, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
-              {[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","Round History"],["gg","Goal Guess"],["ss","Sweepstake"],["wroot","Wroot %"]].map(([v,l]) => (
+              {[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","WTA 24/25-25/26"],["gg","Goal Guess"],["ss","Sweepstake"],["wroot","Wroot %"]].map(([v,l]) => (
                 <button key={v} onClick={()=>setPrizeTab(v)} style={{
                   padding:"9px 12px", cursor:"pointer", fontFamily:"inherit",
                   fontSize:9, letterSpacing:1.2, textTransform:"uppercase", border:"none",
@@ -1128,7 +1128,26 @@ export default function App() {
               </div>
             )}
 
-  
+            {prizeTab==="wtacalc" && (
+              <div>
+                <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>NET WINNINGS — 24/25 & 25/26 SEASONS</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:22 }}>
+                  {prizeData.leaderboard.map((p,i) => (
+                    <div key={p.player} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 12px" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":C.muted, width:18, flexShrink:0 }}>{i+1}</span>
+                        <span style={{ flex:1, fontWeight:500, color:C.text, fontSize:11 }}>{p.player}</span>
+                        <div style={{ display:"flex", gap:10, alignItems:"center", fontSize:10 }}>
+                          <span style={{ color:C.green }}>Won £{p.won%1===0?p.won:p.won.toFixed(2)}</span>
+                          <span style={{ color:C.muted }}>Spent £{p.spent}</span>
+                          <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18, minWidth:60, textAlign:"right", color:p.net>0?C.green:p.net<0?C.red:C.muted }}>
+                            {p.net>0?"+":""}£{p.net%1===0?p.net:p.net.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
                 <div style={{ fontSize:9, color:C.muted, letterSpacing:1.5, marginBottom:10 }}>ROUND BY ROUND</div>
                 <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                   {prizeData.games.map(g => {
