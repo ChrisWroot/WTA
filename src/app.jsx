@@ -113,30 +113,16 @@ export default function App() {
 
   const entrants = useMemo(() => {
     if (!gameData) return [];
-    const mapped = Object.entries(gameData.picks).map(([player, picks]) => ({
+    return Object.entries(gameData.picks).map(([player, picks]) => ({
       player, picks, eliminated: picks.some(p => p.w === false),
       roundsLasted: picks.filter(p => p.w !== null).length,
-    }));
-    return mapped.sort((a, b) => {
-            if (!a.eliminated && !b.eliminated) {
-        const aAlive = a.picks.filter(p => !p.np && p.t !== "NP");
-        const bAlive = b.picks.filter(p => !p.np && p.t !== "NP");
-        // Get all round numbers sorted descending
-        const allRounds = [...new Set([...aAlive, ...bAlive].map(p => p.r))].sort((x,y) => y - x);
-        for (const r of allRounds) {
-          const aTeam = aAlive.find(p => p.r === r)?.t || "ZZZ";
-          const bTeam = bAlive.find(p => p.r === r)?.t || "ZZZ";
-          if (aTeam !== bTeam) return aTeam.localeCompare(bTeam);
-        }
-        return a.player.localeCompare(b.player);
-      }
-
+    })).sort((a, b) => {
+      if (!a.eliminated && !b.eliminated) return a.player.localeCompare(b.player);
       if (!a.eliminated) return -1;
       if (!b.eliminated) return 1;
       return b.roundsLasted - a.roundsLasted || a.player.localeCompare(b.player);
     });
   }, [gameData]);
-
 
   const survivors = useMemo(() => getGameOutcome(gameData ? gameData.picks : {}), [gameData]);
 
@@ -889,11 +875,196 @@ export default function App() {
           </div>
         )}
 
-        {activeTab==="stats" && (
+                {activeTab==="stats" && (
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:8 }}>
 
-            {/* 2. Longest losing streak */}
+            {/* Hall of Fame */}
             <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>🏆 Hall of Fame — Best Player/Team</div>
+              <div style={{ display:"flex", flexDirection:"column" }}>
+                {teamRecords.best.slice(0,3).map((d,i) => {
+                  const color = TEAM_COLORS[d.team]||"#888";
+                  const pctColor = d.pct===100?C.green:d.pct>=85?"#84cc16":C.amber;
+                  const dots = [...Array(d.wins).fill(true),...Array(d.losses).fill(false)];
+                  return (
+                    <div key={d.player+d.team} style={{ display:"flex", alignItems:"flex-start", gap:8, padding:"8px 0", borderBottom:i<2?"1px solid #0d1a2e":"none" }}>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:i===0?"#FFD700":i===1?"#C0C0C0":"#CD7F32", width:20, flexShrink:0, paddingTop:1, textAlign:"right" }}>{i+1}</div>
+                      <div style={{ background:`${color}18`, border:`1px solid ${color}50`, borderRadius:4, padding:"2px 6px", fontSize:9, fontWeight:700, color, flexShrink:0, marginTop:1, minWidth:32, textAlign:"center" }}>{d.team}</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:11, fontWeight:600, color:C.text }}>{d.player}</div>
+                        <div style={{ display:"flex", gap:3, flexWrap:"wrap", marginTop:4 }}>
+                          {dots.map((w,j) => <span key={j} style={{ width:7, height:7, borderRadius:"50%", background:w?C.green:C.red, display:"inline-block", flexShrink:0, opacity:0.9 }}/>)}
+                        </div>
+                      </div>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:pctColor, lineHeight:1, flexShrink:0, paddingTop:1 }}>{d.pct}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize:9, color:C.muted, marginTop:8 }}>min 5 picks · all seasons</div>
+            </div>
+
+            {/* Hall of Shame */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>💀 Hall of Shame — Worst Player/Team</div>
+              <div style={{ display:"flex", flexDirection:"column" }}>
+                {teamRecords.worst.slice(0,3).map((d,i) => {
+                  const color = TEAM_COLORS[d.team]||"#888";
+                  const pctColor = d.pct<=14?C.red:d.pct<=40?"#f97316":C.amber;
+                  const dots = [...Array(d.wins).fill(true),...Array(d.losses).fill(false)];
+                  return (
+                    <div key={d.player+d.team} style={{ display:"flex", alignItems:"flex-start", gap:8, padding:"8px 0", borderBottom:i<2?"1px solid #0d1a2e":"none" }}>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:16, color:i===0?"#FFD700":i===1?"#C0C0C0":"#CD7F32", width:20, flexShrink:0, paddingTop:1, textAlign:"right" }}>{i+1}</div>
+                      <div style={{ background:`${color}18`, border:`1px solid ${color}50`, borderRadius:4, padding:"2px 6px", fontSize:9, fontWeight:700, color, flexShrink:0, marginTop:1, minWidth:32, textAlign:"center" }}>{d.team}</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:11, fontWeight:600, color:C.text }}>{d.player}</div>
+                        <div style={{ display:"flex", gap:3, flexWrap:"wrap", marginTop:4 }}>
+                          {dots.map((w,j) => <span key={j} style={{ width:7, height:7, borderRadius:"50%", background:w?C.green:C.red, display:"inline-block", flexShrink:0, opacity:0.9 }}/>)}
+                        </div>
+                      </div>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:pctColor, lineHeight:1, flexShrink:0, paddingTop:1 }}>{d.pct}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize:9, color:C.muted, marginTop:8 }}>min 5 picks · all seasons</div>
+            </div>
+
+            {/* Team obsession */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>❤️ Biggest Team Obsession</div>
+              {(() => {
+                const topCount = statsData.obsessions[0]?.count;
+                const tied = statsData.obsessions.filter(s => s.count === topCount);
+                return tied.map(s => (
+                  <div key={s.player} style={{ marginBottom: tied.length > 1 ? 6 : 0 }}>
+                    <div style={{ display:"flex", alignItems:"baseline", gap:6, flexWrap:"wrap" }}>
+                      <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:TEAM_COLORS[s.teams[0]]||C.accent, lineHeight:1 }}>{s.count}x</span>
+                      <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{s.player}</span>
+                    </div>
+                    <div style={{ display:"flex", gap:4, flexWrap:"wrap", marginTop:4 }}>
+                      {s.teams.map((t,i) => (
+                        <span key={t}><span style={tbadge(t)}>{t}</span></span>
+                      ))}
+                    </div>
+                  </div>
+                ));
+              })()}
+              <div style={{ fontSize:9, color:C.muted, marginTop:6 }}>most times picking the same team</div>
+            </div>
+
+            {/* Most games entered */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>📅 Most Games Entered</div>
+              <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.accent, lineHeight:1 }}>{statsData.mostGames[0][1]}</span>
+                <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{statsData.mostGames.filter(([,c]) => c === statsData.mostGames[0][1]).map(([p]) => p).join(", ")}</span>
+              </div>
+              <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>rounds entered across all seasons</div>
+            </div>
+
+            {/* Most contrarian */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>🦅 Most Contrarian Picker</div>
+              {statsData.contrarian.slice(0,3).map((s,i) => (
+                <div key={s.player} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:i<2?8:0 }}>
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":"#CD7F32", width:16, flexShrink:0 }}>{i+1}</span>
+                  <span style={{ flex:1, fontSize:11, color:C.text, fontWeight:i===0?600:400 }}>{s.player}</span>
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, color:C.accent }}>{s.pct}%</span>
+                </div>
+              ))}
+              <div style={{ fontSize:9, color:C.muted, marginTop:8 }}>% of GWs picked against the crowd</div>
+            </div>
+
+            {/* Biggest crowd follower */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>🐑 Biggest Crowd Follower</div>
+              {statsData.follower.slice(0,3).map((s,i) => (
+                <div key={s.player} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:i<2?8:0 }}>
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:14, color:i===0?"#FFD700":i===1?"#C0C0C0":"#CD7F32", width:16, flexShrink:0 }}>{i+1}</span>
+                  <span style={{ flex:1, fontSize:11, color:C.text, fontWeight:i===0?600:400 }}>{s.player}</span>
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, color:C.accent }}>{s.pct}%</span>
+                </div>
+              ))}
+              <div style={{ fontSize:9, color:C.muted, marginTop:8 }}>% of GWs picked with the crowd</div>
+            </div>
+
+            {/* Longest winning streak */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>🏆 Longest Winning Streak</div>
+              {statsData.winStreaks.slice(0,1).map((s,i) => (
+                <div key={s.player}>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
+                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.green, lineHeight:1 }}>{s.streak}</span>
+                    <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{s.player}</span>
+                  </div>
+                  <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>consecutive wins — ended {s.end.season==="2024"?"24/25":"25/26"} {s.end.game.replace("Game","Round")} GW{s.end.r}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Longest losing streak */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>💀 Longest Losing Streak</div>
+              {statsData.loseStreaks.slice(0,1).map((s,i) => (
+                <div key={s.player}>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
+                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.red, lineHeight:1 }}>{s.streak}</span>
+                    <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{s.player}</span>
+                  </div>
+                  <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>consecutive losses — ended {s.end.season==="2024"?"24/25":"25/26"} {s.end.game.replace("Game","Round")} GW{s.end.r}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Most total picks */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>🎯 Most Total Picks</div>
+              <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.accent, lineHeight:1 }}>{statsData.mostPicks[0].count}</span>
+                <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{statsData.mostPicks.filter(p => p.count === statsData.mostPicks[0].count).map(p => p.player).join(", ")}</span>
+              </div>
+              <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>total selections made across all rounds</div>
+            </div>
+
+            {/* Crowd win rate */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>👥 Does The Crowd Pick Win?</div>
+              <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
+                <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.green, lineHeight:1 }}>{Math.round(statsData.crowdWins/statsData.crowdTotal*100)}%</span>
+                <span style={{ fontSize:11, color:C.text }}>of the time</span>
+              </div>
+              <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>{statsData.crowdWins} wins out of {statsData.crowdTotal} gameweeks</div>
+            </div>
+
+            {/* Most identical picks */}
+            <div style={card({})}>
+              <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>🤝 Most Identical Picks</div>
+              {statsData.topPairs.slice(0,1).map(p => (
+                <div key={p.pair.join("&")}>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
+                    <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.accent, lineHeight:1 }}>{p.pct}%</span>
+                    <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{p.pair[0]} & {p.pair[1]}</span>
+                  </div>
+                  <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>same pick in {p.matches} of {p.total} shared gameweeks</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bloodiest GW */}
+            {statsData.bloodyGw.length > 0 && (
+              <div style={card({})}>
+                <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>🩸 Bloodiest Gameweek</div>
+                <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
+                  <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.red, lineHeight:1 }}>{statsData.bloodyGw[0].count}</span>
+                  <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{statsData.bloodyGw[0].gw}</span>
+                </div>
+                <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>players eliminated in a single gameweek</div>
+              </div>
+            )}
+
+          </div>
+        )}>
               <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:8 }}>💀 Longest Losing Streak</div>
               {statsData.loseStreaks.slice(0,1).map((s,i) => (
                 <div key={s.player}>
@@ -1086,7 +1257,7 @@ export default function App() {
         {activeTab==="prize" && (
           <div>
             <div style={{ display:"flex", gap:0, marginBottom:16, borderBottom:`1px solid ${C.border}`, overflowX:"auto" }}>
-              {[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","Round History"],["gg","Goal Guess"],["ss","Sweepstake"],["wroot","Wroot %"]].map(([v,l]) => (
+              {[["total","Total Prize"],["wta","WTA All Time"],["wtacalc","Winning History"],["gg","Goal Guess"],["ss","Sweepstake"],["wroot","Wroot %"]].map(([v,l]) => (
                 <button key={v} onClick={()=>setPrizeTab(v)} style={{
                   padding:"9px 12px", cursor:"pointer", fontFamily:"inherit",
                   fontSize:9, letterSpacing:1.2, textTransform:"uppercase", border:"none",
