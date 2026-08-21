@@ -30,7 +30,7 @@ export const GAME_COLS = {
     "Game 11": { start: 68, end: 73 },
   },
   "2026": {
-    "Game 1":  { start: 74, end: 78 }, // BW – GW1, extend 'end' as new rounds are added
+    "Game 1":  { start: 74, end: 74 }, // BW – GW1, extend 'end' as new rounds are added
   }
 };
 export const PRIZE_OUTCOMES = {
