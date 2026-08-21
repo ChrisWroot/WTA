@@ -154,6 +154,20 @@ export default function App() {
 
   const survivors = useMemo(() => getGameOutcome(gameData ? gameData.picks : {}), [gameData]);
 
+  // A round is only "in progress" if a still-alive entrant has an unresolved
+  // (no win/loss colour yet) pick in the most recent round. Previously this
+  // required every entrant to be eliminated, which is never true once a
+  // winner exists, so finished games always showed "in progress".
+  const pendingResults = useMemo(() => {
+    if (!rounds.length) return false;
+    const latestRound = rounds[rounds.length - 1];
+    return entrants.some(e => {
+      if (e.eliminated) return false;
+      const pk = e.picks.find(p => p.r === latestRound);
+      return pk && pk.w === null;
+    });
+  }, [entrants, rounds]);
+
   const playerHistory = useMemo(() => {
     const teamMap = {};
     ["2024", "2025"].forEach(s => {
@@ -553,8 +567,8 @@ export default function App() {
                 <div style={{ ...card({ marginBottom:14, display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }) }}>
                   <div>
                     <div style={{ fontSize:8, color:C.muted, letterSpacing:1.5, textTransform:"uppercase", marginBottom:3 }}>Round Outcome</div>
-                    <div style={{ fontSize:11, color:entrants.every(e=>e.eliminated)?survivors.length===0?C.red:C.green:C.amber, fontWeight:500 }}>
-                      {entrants.every(e=>e.eliminated)?survivors.length===0?"🔴 Rollover — no survivors":survivors.length===1?"🏆 Winner: "+survivors[0]:"🤝 Split: "+survivors.join(" & "):"🟡 In progress"}
+                    <div style={{ fontSize:11, color:pendingResults?C.amber:survivors.length===0?C.red:C.green, fontWeight:500 }}>
+                      {pendingResults?"🟡 In progress":survivors.length===0?"🔴 Rollover — no survivors":survivors.length===1?"🏆 Winner: "+survivors[0]:"🤝 Split: "+survivors.join(" & ")}
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:16, marginLeft:"auto" }}>
