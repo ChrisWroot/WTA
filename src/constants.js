@@ -1,8 +1,6 @@
 import STATIC_DATA from './data.json';
 export { STATIC_DATA };
-
 export const PLAYERS = ["Ed","Chris W","Franklin","Dan","Patrick","Elliot","Ollie","Chris D","Katy","James","Tom","Jack","Joe","Alex","Emily","Phil","Gareth","Helen","Sam","Keiron"];
-
 export const TEAM_COLORS = {
   ARS:"#EF0107",MCI:"#6CABDD",LIV:"#C8102E",TOT:"#132257",CHE:"#034694",
   MUN:"#DA291C",NEW:"#8B8B8B",AVL:"#670E36",BHA:"#0057B8",BOU:"#B22222",
@@ -30,9 +28,11 @@ export const GAME_COLS = {
     "Game 9":  { start: 63, end: 65 },
     "Game 10": { start: 66, end: 67 },
     "Game 11": { start: 68, end: 73 },
+  },
+  "2026": {
+    "Game 1":  { start: 74, end: 78 }, // BW – GW1, extend 'end' as new rounds are added
   }
 };
-
 export const PRIZE_OUTCOMES = {
   "2024": {
     "Game 1": { result: "split", winners: ["Elliot", "Joe"] },
@@ -53,8 +53,9 @@ export const PRIZE_OUTCOMES = {
     "Game 8": { result: "split", winners: ["Chris D", "Phil"] },
     "Game 9": { result: "win", winners: ["Franklin"] },
     "Game 10": { result: "rollover", winners: [] },
-    "Game 11": { result: "inprogress", winners: [], overridePot: 130 },
+    "Game 11": { result: "win", winners: ["Chris W"] },
+  },
+  "2026": {
+    "Game 1": { result: "inprogress", winners: [] },
   }
 };
-
-
