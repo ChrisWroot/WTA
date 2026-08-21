@@ -8,6 +8,17 @@ const ABBR_FULL = {
   EVE:"Everton",FUL:"Fulham",WHU:"West Ham",IPS:"Ipswich",SUN:"Sunderland",
 };
 
+// Formats a season key (e.g. "2026") as "26/27" for any year, so new
+// seasons display correctly without needing a hardcoded ternary added
+// each time one starts.
+function seasonLabel(season) {
+  const year = parseInt(season, 10);
+  if (isNaN(year)) return season;
+  const next = (year + 1) % 100;
+  return `${String(year).slice(-2)}/${String(next).padStart(2, "0")}`;
+}
+
+
 // Ensures every season/game defined in GAME_COLS exists in the data object,
 // even if the live sheet sync or STATIC_DATA hasn't caught up yet.
 // Prevents "Cannot convert undefined or null to object" crashes when a new
@@ -170,7 +181,7 @@ export default function App() {
 
   const playerHistory = useMemo(() => {
     const teamMap = {};
-    ["2024", "2025"].forEach(s => {
+    Object.keys(GAME_COLS).forEach(s => {
       Object.entries(allData[s] || {}).forEach(([game, gd]) => {
         (gd.picks[historyPlayer] || []).forEach(pk => {
           if (pk.np) return;
@@ -192,7 +203,7 @@ export default function App() {
   const overallSuccess = useMemo(() => {
     return PLAYERS.map(player => {
       let wins = 0, losses = 0, gamesPlayed = 0;
-      ["2024", "2025"].forEach(s => {
+      Object.keys(GAME_COLS).forEach(s => {
         Object.values(allData[s] || {}).forEach(gd => {
           const picks = gd.picks[player];
           if (!picks || picks.length === 0) return;
@@ -212,7 +223,7 @@ export default function App() {
 
   const teamStats = useMemo(() => {
     const teams = {};
-    ["2024","2025"].forEach(s => {
+    Object.keys(GAME_COLS).forEach(s => {
       Object.values(allData[s] || {}).forEach(gd => {
         Object.entries(gd.picks).forEach(([player, picks]) => {
           picks.forEach(pk => {
@@ -235,7 +246,7 @@ export default function App() {
 
   const teamRecords = useMemo(() => {
     const combos = {};
-    ["2024", "2025"].forEach(s => {
+    Object.keys(GAME_COLS).forEach(s => {
       Object.values(allData[s] || {}).forEach(gd => {
         Object.entries(gd.picks).forEach(([player, picks]) => {
           picks.forEach(pk => {
@@ -260,7 +271,7 @@ export default function App() {
   const statsData = useMemo(() => {
     const allPicksByPlayer = {};
     const gwPicks = {};
-    ["2024","2025"].forEach(s => {
+    Object.keys(GAME_COLS).forEach(s => {
       Object.entries(allData[s] || {}).forEach(([game, gd]) => {
         Object.entries(gd.picks).forEach(([player, picks]) => {
           if (!allPicksByPlayer[player]) allPicksByPlayer[player] = [];
@@ -357,7 +368,7 @@ export default function App() {
 
     // 9. Most games entered
     const gamesEntered = {};
-    ["2024","2025"].forEach(s => {
+    Object.keys(GAME_COLS).forEach(s => {
       Object.entries(allData[s] || {}).forEach(([game, gd]) => {
         Object.keys(gd.picks).forEach(p => { gamesEntered[p] = (gamesEntered[p]||0) + 1; });
       });
@@ -390,7 +401,7 @@ export default function App() {
     const ENTRY = 10;
     const games = [];
     let rolledOver = 0;
-    ["2024", "2025"].forEach(s => {
+    Object.keys(GAME_COLS).forEach(s => {
       Object.entries(allData[s] || {}).forEach(([game, gd]) => {
         const outcome = PRIZE_OUTCOMES[s]?.[game];
         if (!outcome) return;
@@ -511,7 +522,7 @@ export default function App() {
             <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}>
               {Object.keys(GAME_COLS).map(s => (
                 <button key={s} style={pill(season===s)} onClick={()=>{ setSeason(s); setSelectedGame(Object.keys(allData[s] || {})[0]); }}>
-                  {s === "2024" ? "24/25" : s === "2025" ? "25/26" : s === "2026" ? "26/27" : s}
+                  {seasonLabel(s)}
                 </button>
               ))}
             </div>
@@ -1041,7 +1052,7 @@ export default function App() {
                     <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.green, lineHeight:1 }}>{s.streak}</span>
                     <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{s.player}</span>
                   </div>
-                  <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>consecutive wins — ended {s.end.season==="2024"?"24/25":"25/26"} {s.end.game.replace("Game","Round")} GW{s.end.r}</div>
+                  <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>consecutive wins — ended {seasonLabel(s.end.season)} {s.end.game.replace("Game","Round")} GW{s.end.r}</div>
                 </div>
               ))}
             </div>
@@ -1055,7 +1066,7 @@ export default function App() {
                     <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, color:C.red, lineHeight:1 }}>{s.streak}</span>
                     <span style={{ fontSize:11, color:C.text, fontWeight:600 }}>{s.player}</span>
                   </div>
-                  <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>consecutive losses — ended {s.end.season==="2024"?"24/25":"25/26"} {s.end.game.replace("Game","Round")} GW{s.end.r}</div>
+                  <div style={{ fontSize:9, color:C.muted, marginTop:3 }}>consecutive losses — ended {seasonLabel(s.end.season)} {s.end.game.replace("Game","Round")} GW{s.end.r}</div>
                 </div>
               ))}
             </div>
@@ -1181,7 +1192,7 @@ export default function App() {
                       <div key={g.season+g.game} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"10px 12px" }}>
                         <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
                           <div style={{ flex:1 }}>
-                            <div style={{ fontSize:11, fontWeight:600, color:C.text }}>{g.season==="2024"?"24/25":"25/26"} {g.game.replace("Game","Round")}</div>
+                            <div style={{ fontSize:11, fontWeight:600, color:C.text }}>{seasonLabel(g.season)} {g.game.replace("Game","Round")}</div>
                             <div style={{ fontSize:10, color:outcomeColor, marginTop:2 }}>{outcomeLabel}</div>
                           </div>
                           <div style={{ textAlign:"right" }}>
