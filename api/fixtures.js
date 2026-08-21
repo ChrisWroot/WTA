@@ -3,11 +3,10 @@ export default async function handler(req, res) {
   
   let url;
   if (type === "all") {
-    url = "https://api.football-data.org/v4/competitions/PL/matches?season=2025";
+    url = "https://api.football-data.org/v4/competitions/PL/matches?season=2026";
   } else {
-    url = "https://api.football-data.org/v4/competitions/PL/matches?status=SCHEDULED,IN_PLAY,PAUSED&limit=20";
+    url = "https://api.football-data.org/v4/competitions/PL/matches?season=2026&status=SCHEDULED,IN_PLAY,PAUSED&limit=20";
   }
-
   try {
     const response = await fetch(url, {
       headers: { "X-Auth-Token": process.env.VITE_FOOTBALL_API_KEY }
