@@ -7,6 +7,24 @@ const ABBR_FULL = {
   WOL:"Wolves",NFO:"Nottm Forest",BRE:"Brentford",CRY:"Crystal Palace",
   EVE:"Everton",FUL:"Fulham",WHU:"West Ham",IPS:"Ipswich",SUN:"Sunderland",
 };
+
+// Ensures every season/game defined in GAME_COLS exists in the data object,
+// even if the live sheet sync or STATIC_DATA hasn't caught up yet.
+// Prevents "Cannot convert undefined or null to object" crashes when a new
+// season/game is added to constants.js before data.json / the sheet has it.
+function fillMissing(data) {
+  const result = { ...data };
+  Object.entries(GAME_COLS).forEach(([season, games]) => {
+    result[season] = { ...(result[season] || {}) };
+    Object.keys(games).forEach(game => {
+      if (!result[season][game]) {
+        result[season][game] = { rounds: [], picks: {} };
+      }
+    });
+  });
+  return result;
+}
+
 function getCellColor(rowData, colIdx) {
   try {
     const bg = rowData[colIdx]?.userEnteredFormat?.backgroundColor;
@@ -67,7 +85,7 @@ function getGameOutcome(picks) {
 }
 
 export default function App() {
-  const [allData, setAllData] = useState(STATIC_DATA);
+  const [allData, setAllData] = useState(() => fillMissing(STATIC_DATA));
   const [loading, setLoading] = useState(true);
   const [liveError, setLiveError] = useState(false);
   const lastSeason = Object.keys(GAME_COLS).at(-1);
@@ -92,7 +110,7 @@ export default function App() {
         const hasData = Object.values(parsed).some(s =>
           Object.values(s).some(game => Object.keys(game.picks).length > 0)
         );
-        if (hasData) setAllData(parsed);
+        if (hasData) setAllData(fillMissing(parsed));
         if (stats.length > 0) setOverallStats(stats);
         if (fixtureData.fixtures && fixtureData.fixtures.length > 0) {
           setFixtures(fixtureData);
@@ -107,8 +125,8 @@ export default function App() {
       .catch(() => { setLiveError(true); setLoading(false); });
   }, []);
 
-  const games = Object.keys(allData[season]);
-  const gameData = allData[season][selectedGame];
+  const games = Object.keys(allData[season] || {});
+  const gameData = allData[season]?.[selectedGame];
   const rounds = gameData ? gameData.rounds : [];
 
   const entrants = useMemo(() => {
@@ -139,7 +157,7 @@ export default function App() {
   const playerHistory = useMemo(() => {
     const teamMap = {};
     ["2024", "2025"].forEach(s => {
-      Object.entries(allData[s]).forEach(([game, gd]) => {
+      Object.entries(allData[s] || {}).forEach(([game, gd]) => {
         (gd.picks[historyPlayer] || []).forEach(pk => {
           if (pk.np) return;
           if (!teamMap[pk.t]) teamMap[pk.t] = { team: pk.t, picked: 0, wins: 0, losses: 0, usages: [] };
@@ -161,7 +179,7 @@ export default function App() {
     return PLAYERS.map(player => {
       let wins = 0, losses = 0, gamesPlayed = 0;
       ["2024", "2025"].forEach(s => {
-        Object.values(allData[s]).forEach(gd => {
+        Object.values(allData[s] || {}).forEach(gd => {
           const picks = gd.picks[player];
           if (!picks || picks.length === 0) return;
           gamesPlayed++;
@@ -181,7 +199,7 @@ export default function App() {
   const teamStats = useMemo(() => {
     const teams = {};
     ["2024","2025"].forEach(s => {
-      Object.values(allData[s]).forEach(gd => {
+      Object.values(allData[s] || {}).forEach(gd => {
         Object.entries(gd.picks).forEach(([player, picks]) => {
           picks.forEach(pk => {
             if (pk.np || pk.t === "NP") return;
@@ -204,7 +222,7 @@ export default function App() {
   const teamRecords = useMemo(() => {
     const combos = {};
     ["2024", "2025"].forEach(s => {
-      Object.values(allData[s]).forEach(gd => {
+      Object.values(allData[s] || {}).forEach(gd => {
         Object.entries(gd.picks).forEach(([player, picks]) => {
           picks.forEach(pk => {
             if (pk.t === "NP" || pk.np) return;
@@ -229,7 +247,7 @@ export default function App() {
     const allPicksByPlayer = {};
     const gwPicks = {};
     ["2024","2025"].forEach(s => {
-      Object.entries(allData[s]).forEach(([game, gd]) => {
+      Object.entries(allData[s] || {}).forEach(([game, gd]) => {
         Object.entries(gd.picks).forEach(([player, picks]) => {
           if (!allPicksByPlayer[player]) allPicksByPlayer[player] = [];
           picks.forEach(pk => {
@@ -326,7 +344,7 @@ export default function App() {
     // 9. Most games entered
     const gamesEntered = {};
     ["2024","2025"].forEach(s => {
-      Object.entries(allData[s]).forEach(([game, gd]) => {
+      Object.entries(allData[s] || {}).forEach(([game, gd]) => {
         Object.keys(gd.picks).forEach(p => { gamesEntered[p] = (gamesEntered[p]||0) + 1; });
       });
     });
@@ -359,8 +377,9 @@ export default function App() {
     const games = [];
     let rolledOver = 0;
     ["2024", "2025"].forEach(s => {
-      Object.entries(allData[s]).forEach(([game, gd]) => {
-        const outcome = PRIZE_OUTCOMES[s][game];
+      Object.entries(allData[s] || {}).forEach(([game, gd]) => {
+        const outcome = PRIZE_OUTCOMES[s]?.[game];
+        if (!outcome) return;
         const ents = Object.values(gd.picks).filter(p => p.length > 0).length;
         const gamePot = outcome.overridePot !== undefined ? outcome.overridePot : ents * ENTRY;
         const totalPot = gamePot + rolledOver;
@@ -476,9 +495,9 @@ export default function App() {
         {activeTab==="grid" && (
           <div>
             <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}>
-              {["2024","2025"].map(s => (
-                <button key={s} style={pill(season===s)} onClick={()=>{ setSeason(s); setSelectedGame(Object.keys(allData[s])[0]); }}>
-                  {s === "2024" ? "24/25" : "25/26"}
+              {Object.keys(GAME_COLS).map(s => (
+                <button key={s} style={pill(season===s)} onClick={()=>{ setSeason(s); setSelectedGame(Object.keys(allData[s] || {})[0]); }}>
+                  {s === "2024" ? "24/25" : s === "2025" ? "25/26" : s === "2026" ? "26/27" : s}
                 </button>
               ))}
             </div>
