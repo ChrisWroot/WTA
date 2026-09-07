@@ -30,8 +30,8 @@ export const GAME_COLS = {
     "Game 11": { start: 68, end: 73 },
   },
   "2026": {
-    "Game 1":  { start: 74, end: 79 },
-    "Game 2":  { start: 80, end: 80 },
+    "Game 1":  { start: 74, end: 76 },
+    "Game 2":  { start: 77, end: 77 },
   }
 };
 export const PRIZE_OUTCOMES = {
