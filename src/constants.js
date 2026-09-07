@@ -31,6 +31,7 @@ export const GAME_COLS = {
   },
   "2026": {
     "Game 1":  { start: 74, end: 79 },
+    "Game 2":  { start: 80, end: 80 },
   }
 };
 export const PRIZE_OUTCOMES = {
@@ -56,6 +57,7 @@ export const PRIZE_OUTCOMES = {
     "Game 11": { result: "win", winners: ["Chris W"] },
   },
   "2026": {
-    "Game 1": { result: "inprogress", winners: [] },
+    "Game 1": { result: "split", winners: ["Dan", "Ollie"] },
+    "Game 2": { result: "inprogress", winners: [] },
   }
 };
